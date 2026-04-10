@@ -8,7 +8,7 @@ class Settings:
         self.photos_dir: str = "/photos"
         self.snapshots_dir: str = "/data/snapshots"
         self.edit_mode_enabled: bool = os.getenv(
-            "EDIT_MODE_ENABLED", "false"
+            "EDIT_MODE_ENABLED", "true"
         ).lower() in ("true", "1", "yes")
         self.model_idle_timeout: int = int(os.getenv("MODEL_IDLE_TIMEOUT", "600"))
 

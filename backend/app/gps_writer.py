@@ -50,12 +50,17 @@ def write_gps(
     *,
     estimated: bool = True,
     session_id: str = "",
+    allow_overwrite_estimated: bool = False,
 ) -> WriteResult:
     """Write GPS to *image_path* with full safety checks.
 
     Returns a ``WriteResult`` describing exactly what happened.
     The ``_original`` backup file is ALWAYS created (never uses
     ``-overwrite_original``).
+
+    If *allow_overwrite_estimated* is True, existing GPS that is marked
+    as ESTIMATED (predicted) may be overwritten.  Real GPS is NEVER
+    overwritten regardless of this flag.
     """
     result = WriteResult(image_path=image_path)
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -73,14 +78,20 @@ def write_gps(
     pre = detect_gps(image_path)
 
     if pre.has_gps:
-        msg = (
-            f"ABORT: pre-write check found GPS in {image_path} "
-            f"(sources={pre.sources}, coords={pre.coordinates}). "
-            "Refusing to write — file already has location data."
-        )
-        log(msg)
-        result.error = msg
-        return result
+        if allow_overwrite_estimated and pre.is_estimated:
+            log(
+                "PRE-WRITE CHECK: existing GPS is ESTIMATED — "
+                "overwrite permitted by allow_overwrite_estimated flag"
+            )
+        else:
+            msg = (
+                f"ABORT: pre-write check found GPS in {image_path} "
+                f"(sources={pre.sources}, coords={pre.coordinates}). "
+                "Refusing to write — file already has location data."
+            )
+            log(msg)
+            result.error = msg
+            return result
 
     if pre.error:
         msg = f"ABORT: pre-write check failed for {image_path}: {pre.error}"
@@ -89,7 +100,7 @@ def write_gps(
         return result
 
     result.pre_check_passed = True
-    log("PRE-WRITE CHECK: PASSED (no GPS found)")
+    log("PRE-WRITE CHECK: PASSED")
 
     # ================================================================
     # BUILD EXIFTOOL COMMAND

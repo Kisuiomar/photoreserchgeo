@@ -7,7 +7,7 @@ import TestingMode from "./components/TestingMode";
 
 const TABS: { key: AppMode; label: string }[] = [
   { key: "testing", label: "Testing" },
-  { key: "monitor", label: "Monitor" },
+  { key: "monitor", label: "Overview" },
   { key: "edit", label: "Edit" },
 ];
 

@@ -6,44 +6,64 @@ import {
   editCleanupBackups,
   editManual,
   editPause,
-  editQueue,
   editQueueNext,
   editReject,
   editResume,
   editRollbackAll,
-  editRun,
+  editRoundSummary,
   editStart,
+  editStartRound,
   editStatus,
 } from "../api";
 import ProgressBar from "./ProgressBar";
 import ReviewCard from "./edit/ReviewCard";
 
+type Step =
+  | "config"
+  | "scanned"
+  | "processing"
+  | "paused"
+  | "review"
+  | "round_complete"
+  | "session_complete";
+
 interface SessionInfo {
   session_id: string;
   total_images: number;
-  gps_images_skipped: number;
-  to_process: number;
+  real_gps_count: number;
+  predicted_gps_count: number;
+  no_gps_count: number;
   disagreements: number;
   warnings: string[];
 }
 
-interface QueueItem {
-  image_id: string;
-  filename: string;
-  status: string;
-  predictions: null | Array<{
-    rank: number;
-    lat: number;
-    lon: number;
-    probability: number;
-    address: { city: string; region: string; country: string } | null;
-  }>;
+interface RoundInfo {
+  round: number;
+  candidates: number;
+  reference_gps: number;
+}
+
+interface RoundSummary {
+  round_num: number;
+  total_candidates: number;
+  above_threshold: number;
+  below_threshold: number;
+  accepted: number;
+  rejected: number;
+  pending_review: number;
+  auto_skipped: number;
+  remaining_unlocated: number;
+  reference_gps_count: number;
 }
 
 interface CurrentReview {
   image_id: string;
   filename: string;
   thumbnail_base64: string;
+  combined_score: number;
+  model_confidence: number;
+  temporal_confidence: number;
+  temporal_source: string | null;
   predictions: Array<{
     rank: number;
     lat: number;
@@ -54,71 +74,98 @@ interface CurrentReview {
 }
 
 export default function EditMode() {
+  const [step, setStep] = useState<Step>("config");
   const [directory, setDirectory] = useState("");
+  const [threshold, setThreshold] = useState(0.3);
+  const [includePredicted, setIncludePredicted] = useState(false);
+
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [inferenceStatus, setInferenceStatus] = useState<string>("ready");
+  const [roundInfo, setRoundInfo] = useState<RoundInfo | null>(null);
+  const [roundSummary, setRoundSummary] = useState<RoundSummary | null>(null);
+
   const [processed, setProcessed] = useState(0);
   const [total, setTotal] = useState(0);
+  const [aboveThreshold, setAboveThreshold] = useState(0);
+  const [belowThreshold, setBelowThreshold] = useState(0);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
-  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [currentRound, setCurrentRound] = useState(0);
+
   const [current, setCurrent] = useState<CurrentReview | null>(null);
-  const [reviewIndex, setReviewIndex] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [reviewTotal, setReviewTotal] = useState(0);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showSummary, setShowSummary] = useState(false);
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /* ---- session setup ---- */
+  /* ---- Step 1: Start session (scan directory) ---- */
 
   const handleStart = useCallback(async () => {
     setError(null);
     try {
-      const info = await editStart(directory);
+      const info = await editStart(directory, threshold, includePredicted);
       setSession(info);
       setSessionId(info.session_id);
-      setInferenceStatus("ready");
+      setStep("scanned");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : "Failed to start session");
     }
-  }, [directory]);
+  }, [directory, threshold, includePredicted]);
 
-  /* ---- inference control ---- */
+  /* ---- Step 2: Start a round ---- */
 
-  const handleRun = useCallback(async () => {
+  const handleStartRound = useCallback(async () => {
     if (!sessionId) return;
-    await editRun(sessionId);
-    setInferenceStatus("running");
-    setTotal(session?.to_process ?? 0);
-  }, [sessionId, session]);
+    setError(null);
+    try {
+      const info = await editStartRound(sessionId);
+      setRoundInfo(info);
+      setCurrentRound(info.round);
+      setTotal(info.candidates);
+      setProcessed(0);
+      setAboveThreshold(0);
+      setBelowThreshold(0);
 
-  const handlePause = useCallback(async () => {
-    if (sessionId) await editPause(sessionId);
+      if (info.status === "no_candidates") {
+        setStep("session_complete");
+      } else {
+        setStep("processing");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start round");
+    }
   }, [sessionId]);
 
-  const handleResume = useCallback(async () => {
-    if (!sessionId) return;
-    await editResume(sessionId);
-    setInferenceStatus("running");
-  }, [sessionId]);
-
-  /* ---- poll inference status ---- */
+  /* ---- Poll inference status ---- */
 
   useEffect(() => {
-    if (!sessionId || inferenceStatus !== "running") return;
+    if (!sessionId || step !== "processing") return;
 
     const poll = setInterval(async () => {
       try {
         const s = await editStatus(sessionId);
         setProcessed(s.processed);
         setTotal(s.total);
+        setAboveThreshold(s.above_threshold ?? 0);
+        setBelowThreshold(s.below_threshold ?? 0);
         setCurrentImage(s.current_image);
-        setInferenceStatus(s.status);
 
-        if (s.status === "complete" || s.status === "paused") {
+        if (s.status === "reviewing" || s.status === "round_complete") {
           clearInterval(poll);
-          refreshQueue();
+          if (s.above_threshold > 0) {
+            setReviewTotal(s.above_threshold);
+            setReviewCount(0);
+            loadNext();
+            setStep("review");
+          } else {
+            loadRoundSummary(s.current_round);
+            setStep("round_complete");
+          }
+        } else if (s.status === "paused") {
+          clearInterval(poll);
+          setStep("paused");
         }
       } catch {
         /* keep polling */
@@ -127,15 +174,9 @@ export default function EditMode() {
 
     pollRef.current = poll;
     return () => clearInterval(poll);
-  }, [sessionId, inferenceStatus]);
+  }, [sessionId, step]);
 
-  /* ---- queue management ---- */
-
-  const refreshQueue = useCallback(async () => {
-    if (!sessionId) return;
-    const { items } = await editQueue(sessionId, 0, 500);
-    setQueue(items);
-  }, [sessionId]);
+  /* ---- Review helpers ---- */
 
   const loadNext = useCallback(async () => {
     if (!sessionId) return;
@@ -143,22 +184,25 @@ export default function EditMode() {
     try {
       const item = await editQueueNext(sessionId);
       setCurrent(item);
-      const idx = queue.findIndex((q) => q.image_id === item.image_id);
-      if (idx >= 0) setReviewIndex(idx);
     } catch {
       setCurrent(null);
-      setShowSummary(true);
+      loadRoundSummary(currentRound);
+      setStep("round_complete");
     }
-  }, [sessionId, queue]);
+  }, [sessionId, currentRound]);
 
-  // Load first review item when inference completes
-  useEffect(() => {
-    if (inferenceStatus === "complete" && queue.length > 0 && !current) {
-      loadNext();
-    }
-  }, [inferenceStatus, queue, current, loadNext]);
-
-  /* ---- review actions ---- */
+  const loadRoundSummary = useCallback(
+    async (roundNum: number) => {
+      if (!sessionId) return;
+      try {
+        const summary = await editRoundSummary(sessionId, roundNum);
+        setRoundSummary(summary);
+      } catch {
+        /* ignore */
+      }
+    },
+    [sessionId],
+  );
 
   const handleAccept = useCallback(async () => {
     if (!sessionId || !current || busy) return;
@@ -172,14 +216,14 @@ export default function EditMode() {
       } else {
         setFeedback(`Write failed: ${applyResult.error}`);
       }
-      await refreshQueue();
+      setReviewCount((c) => c + 1);
       setTimeout(() => loadNext(), 800);
     } catch (err) {
       setFeedback(err instanceof Error ? err.message : "Failed");
     } finally {
       setBusy(false);
     }
-  }, [sessionId, current, busy, refreshQueue, loadNext]);
+  }, [sessionId, current, busy, loadNext]);
 
   const handleReject = useCallback(async () => {
     if (!sessionId || !current || busy) return;
@@ -187,12 +231,12 @@ export default function EditMode() {
     try {
       await editReject(sessionId, current.image_id);
       setFeedback("Skipped");
-      await refreshQueue();
+      setReviewCount((c) => c + 1);
       setTimeout(() => loadNext(), 500);
     } finally {
       setBusy(false);
     }
-  }, [sessionId, current, busy, refreshQueue, loadNext]);
+  }, [sessionId, current, busy, loadNext]);
 
   const handleManual = useCallback(
     async (address: string) => {
@@ -204,7 +248,7 @@ export default function EditMode() {
         setFeedback(
           `Manual GPS: ${result.coordinates.lat.toFixed(4)}, ${result.coordinates.lon.toFixed(4)}`,
         );
-        await refreshQueue();
+        setReviewCount((c) => c + 1);
         setTimeout(() => loadNext(), 800);
       } catch (err) {
         setFeedback(err instanceof Error ? err.message : "Geocoding failed");
@@ -212,37 +256,31 @@ export default function EditMode() {
         setBusy(false);
       }
     },
-    [sessionId, current, busy, refreshQueue, loadNext],
+    [sessionId, current, busy, loadNext],
   );
 
-  /* ---- filmstrip click ---- */
+  const handlePause = useCallback(async () => {
+    if (sessionId) {
+      await editPause(sessionId);
+      setStep("paused");
+    }
+  }, [sessionId]);
 
-  const jumpTo = useCallback(
-    async (item: QueueItem) => {
-      if (!sessionId || item.status === "queued") return;
-      setFeedback(null);
-      try {
-        const full = await editQueueNext(sessionId);
-        // Try to load this specific item — fall back to next
-        if (full.image_id === item.image_id) {
-          setCurrent(full);
-        }
-      } catch {
-        /* ignore */
-      }
-    },
-    [sessionId],
-  );
+  const handleResume = useCallback(async () => {
+    if (sessionId) {
+      await editResume(sessionId);
+      setStep("processing");
+    }
+  }, [sessionId]);
 
-  /* ---- summary actions ---- */
+  /* ---- Session-level actions ---- */
 
   const handleRollbackAll = useCallback(async () => {
     if (!sessionId || !confirm("Undo ALL GPS writes from this session?"))
       return;
     const result = await editRollbackAll(sessionId);
     alert(`Rolled back ${result.rolled_back} images.`);
-    await refreshQueue();
-  }, [sessionId, refreshQueue]);
+  }, [sessionId]);
 
   const handleCleanup = useCallback(async () => {
     if (
@@ -256,100 +294,241 @@ export default function EditMode() {
     alert(`Cleaned up ${result.cleaned} backup files.`);
   }, [sessionId]);
 
-  /* ---- computed stats ---- */
-
-  const accepted = queue.filter(
-    (q) => q.status === "accepted" || q.status === "manual",
-  ).length;
-  const rejected = queue.filter((q) => q.status === "rejected").length;
-  const pending = queue.filter((q) => q.status === "pending_review").length;
-  const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+  const resetSession = useCallback(() => {
+    setStep("config");
+    setSession(null);
+    setSessionId(null);
+    setRoundInfo(null);
+    setRoundSummary(null);
+    setCurrent(null);
+    setError(null);
+    setFeedback(null);
+    setCurrentRound(0);
+  }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm">
+        <div className="p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm animate-slide-down">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
-      {/* ---- setup ---- */}
-      {!session && (
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={directory}
-              onChange={(e) => setDirectory(e.target.value)}
-              placeholder="Directory path (leave empty for all)"
-              className="flex-1 bg-white border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-400"
-            />
+      {/* ============ STEP: CONFIG ============ */}
+      {step === "config" && (
+        <div className="animate-fade-in space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-gray-900">
+              Add GPS to Your Photos
+            </h2>
+            <p className="text-sm text-gray-500 max-w-xl mx-auto">
+              Predict locations for photos without GPS coordinates using AI and
+              temporal context from nearby photos.
+            </p>
+          </div>
+
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                How it works
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <StepExplainer
+                  num={1}
+                  title="Analyze"
+                  desc="We predict a location for each photo without GPS, using the AI model and temporal proximity to nearby GPS-tagged photos."
+                />
+                <StepExplainer
+                  num={2}
+                  title="Review"
+                  desc="You review each prediction above your confidence threshold and decide to accept or decline it."
+                />
+                <StepExplainer
+                  num={3}
+                  title="Iterate"
+                  desc="Accepted locations become reference points for the next round, helping predict photos that couldn't be located before."
+                />
+              </div>
+            </div>
+
+            <hr className="border-gray-100" />
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Photo directory
+                </label>
+                <input
+                  type="text"
+                  value={directory}
+                  onChange={(e) => setDirectory(e.target.value)}
+                  placeholder="Leave empty to scan all photos"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Confidence threshold
+                  <span className="ml-2 text-gray-400 font-normal">
+                    ({(threshold * 100).toFixed(0)}%)
+                  </span>
+                </label>
+                <input
+                  type="range"
+                  min={0.1}
+                  max={0.9}
+                  step={0.05}
+                  value={threshold}
+                  onChange={(e) => setThreshold(Number(e.target.value))}
+                  className="w-full accent-indigo-500"
+                />
+                <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                  <span>10% — more predictions, lower quality</span>
+                  <span>90% — fewer predictions, higher quality</span>
+                </div>
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={includePredicted}
+                  onChange={(e) => setIncludePredicted(e.target.checked)}
+                  className="mt-0.5 accent-indigo-500"
+                />
+                <div>
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                    Re-process photos with predicted GPS
+                  </span>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Off by default. Enable to re-analyze photos that already
+                    have AI-predicted coordinates (e.g. to try with a better
+                    model). Real GPS is never touched.
+                  </p>
+                </div>
+              </label>
+            </div>
+
             <button
               onClick={handleStart}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 active:scale-[0.99]"
             >
-              Start Edit Session
+              Scan & Start Session
             </button>
           </div>
-          <p className="text-xs text-gray-400 text-center">
-            Scans the directory and identifies images without GPS data for
-            analysis.
-          </p>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <p className="text-xs text-amber-700">
+              <strong>Safety guarantee:</strong> Photos with real GPS
+              coordinates from your camera are never modified. Only photos
+              without any GPS data (or with previously predicted GPS, if the
+              toggle above is on) will be processed. All writes create a backup
+              file that can be rolled back.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* ---- session overview ---- */}
-      {session && inferenceStatus === "ready" && (
-        <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-800">Session Ready</h3>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="bg-gray-50 rounded-2xl p-3">
-              <p className="text-lg font-bold text-gray-900">
-                {session.total_images}
-              </p>
-              <p className="text-[10px] text-gray-400 uppercase">Total</p>
-            </div>
-            <div className="bg-gray-50 rounded-2xl p-3">
-              <p className="text-lg font-bold text-gray-500">
-                {session.gps_images_skipped}
-              </p>
-              <p className="text-[10px] text-gray-400 uppercase">
-                Have GPS (skipped)
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-2xl p-3">
-              <p className="text-lg font-bold text-blue-600">
-                {session.to_process}
-              </p>
-              <p className="text-[10px] text-gray-400 uppercase">
-                Ready to analyze
-              </p>
-            </div>
-          </div>
-          {session.disagreements > 0 && (
-            <p className="text-xs text-yellow-600">
-              {session.disagreements} image(s) excluded due to ambiguous
-              metadata (safety check)
+      {/* ============ STEP: SCANNED ============ */}
+      {step === "scanned" && session && (
+        <div className="animate-fade-in-up space-y-5">
+          <div className="text-center">
+            <h2 className="text-lg font-bold text-gray-900">
+              Round 1 — Ready to Analyze
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Your photo library has been scanned
             </p>
-          )}
+          </div>
+
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <StatBox
+                value={session.real_gps_count}
+                label="Real GPS"
+                sub="Protected — never touched"
+                color="text-emerald-600"
+              />
+              <StatBox
+                value={session.no_gps_count}
+                label="No GPS"
+                sub="Ready to analyze"
+                color="text-blue-600"
+              />
+              <StatBox
+                value={session.predicted_gps_count}
+                label="Predicted GPS"
+                sub={
+                  includePredicted
+                    ? "Will be re-processed"
+                    : "Skipped (toggle off)"
+                }
+                color="text-gray-500"
+              />
+            </div>
+
+            {session.disagreements > 0 && (
+              <p className="text-xs text-yellow-600 mt-3">
+                {session.disagreements} image(s) skipped due to ambiguous GPS
+                metadata
+              </p>
+            )}
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+            <p className="text-xs text-blue-700">
+              The AI will analyze <strong>{session.no_gps_count} photos</strong>{" "}
+              without GPS and use the{" "}
+              <strong>{session.real_gps_count} GPS-tagged photos</strong> as
+              temporal context. Photos taken close in time to GPS-tagged photos
+              receive a confidence boost.
+            </p>
+          </div>
+
           <button
-            onClick={handleRun}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors"
+            onClick={handleStartRound}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all shadow-sm hover:shadow-md hover:shadow-indigo-200"
           >
-            Start Analysis ({session.to_process} images)
+            Start Analysis (
+            {session.no_gps_count +
+              (includePredicted ? session.predicted_gps_count : 0)}{" "}
+            images)
           </button>
         </div>
       )}
 
-      {/* ---- inference progress ---- */}
-      {inferenceStatus === "running" && (
-        <div className="space-y-2">
+      {/* ============ STEP: PROCESSING ============ */}
+      {step === "processing" && (
+        <div className="animate-fade-in space-y-4">
+          <div className="text-center">
+            <h2 className="text-lg font-bold text-gray-900">
+              Round {currentRound} — Analyzing
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {currentRound > 1
+                ? `Using ${roundInfo?.reference_gps ?? 0} reference photos (including your accepted predictions)`
+                : `Using ${roundInfo?.reference_gps ?? 0} GPS-tagged photos as context`}
+            </p>
+          </div>
+
           <ProgressBar
             done={processed}
             total={total}
             currentItem={currentImage}
             label="Analyzing"
           />
+
+          {(aboveThreshold > 0 || belowThreshold > 0) && (
+            <div className="flex gap-3 justify-center text-xs">
+              <span className="text-emerald-600">
+                {aboveThreshold} above threshold
+              </span>
+              <span className="text-gray-400">
+                {belowThreshold} below threshold
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-end">
             <button
               onClick={handlePause}
@@ -361,8 +540,9 @@ export default function EditMode() {
         </div>
       )}
 
-      {inferenceStatus === "paused" && (
-        <div className="bg-white border border-yellow-300 shadow-sm rounded-2xl p-5 flex items-center justify-between">
+      {/* ============ STEP: PAUSED ============ */}
+      {step === "paused" && (
+        <div className="bg-white border border-yellow-300 shadow-sm rounded-2xl p-5 flex items-center justify-between animate-fade-in">
           <p className="text-sm text-yellow-600">
             Paused — {processed}/{total} processed
           </p>
@@ -375,42 +555,36 @@ export default function EditMode() {
         </div>
       )}
 
-      {/* ---- filmstrip ---- */}
-      {queue.length > 0 && !showSummary && (
-        <div className="flex gap-1 overflow-x-auto py-2">
-          {queue.map((q, i) => {
-            const color =
-              q.status === "accepted"
-                ? "ring-emerald-500"
-                : q.status === "manual"
-                  ? "ring-blue-500"
-                  : q.status === "rejected"
-                    ? "ring-gray-400"
-                    : q.status === "pending_review"
-                      ? "ring-gray-400"
-                      : "ring-gray-200";
-            const isActive = current?.image_id === q.image_id;
-            return (
-              <button
-                key={q.image_id}
-                onClick={() => jumpTo(q)}
-                className={`w-8 h-8 rounded flex-shrink-0 flex items-center justify-center text-[9px] font-bold ring-2 transition-all ${color} ${isActive ? "scale-110 bg-gray-200" : "bg-gray-100 hover:bg-gray-200"}`}
-                title={`${q.filename} — ${q.status}`}
-              >
-                {i + 1}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* ============ STEP: REVIEW ============ */}
+      {step === "review" && current && (
+        <div className="animate-fade-in-up space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900">
+              Round {currentRound} — Review Predictions
+            </h2>
+            <span className="text-xs text-gray-400">
+              {reviewCount + 1} of {reviewTotal}
+            </span>
+          </div>
 
-      {/* ---- review card ---- */}
-      {current && !showSummary && (
-        <div>
-          <p className="text-xs text-gray-400 mb-2">
-            Reviewing image {reviewIndex + 1} of {queue.length} · {pending}{" "}
-            remaining
-          </p>
+          {current.temporal_source && (
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
+              <p className="text-xs text-indigo-700">
+                <strong>Temporal context:</strong>{" "}
+                {current.temporal_source === "burst"
+                  ? "A GPS-tagged photo was taken within 5 minutes of this one — high confidence."
+                  : current.temporal_source === "same_day"
+                    ? "A GPS-tagged photo was taken on the same day."
+                    : current.temporal_source === "interpolation"
+                      ? "GPS-tagged photos exist before and after this one — location interpolated."
+                      : current.temporal_source === "filename_sequence"
+                        ? "Sequential filename match with a GPS-tagged photo in the same folder."
+                        : `Context source: ${current.temporal_source}`}{" "}
+                Score: {(current.combined_score * 100).toFixed(0)}%
+              </p>
+            </div>
+          )}
+
           <ReviewCard
             imageId={current.image_id}
             filename={current.filename}
@@ -425,57 +599,167 @@ export default function EditMode() {
         </div>
       )}
 
-      {/* ---- summary ---- */}
-      {showSummary && (
-        <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-800">
-            Session Complete
-          </h3>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="bg-emerald-50 rounded-2xl p-3">
-              <p className="text-lg font-bold text-emerald-600">{accepted}</p>
-              <p className="text-[10px] text-gray-400 uppercase">GPS Applied</p>
-            </div>
-            <div className="bg-gray-50 rounded-2xl p-3">
-              <p className="text-lg font-bold text-gray-500">{rejected}</p>
-              <p className="text-[10px] text-gray-400 uppercase">Rejected</p>
-            </div>
-            <div className="bg-blue-50 rounded-2xl p-3">
-              <p className="text-lg font-bold text-blue-600">{pending}</p>
-              <p className="text-[10px] text-gray-400 uppercase">
-                Still Pending
-              </p>
-            </div>
+      {/* ============ STEP: ROUND COMPLETE ============ */}
+      {step === "round_complete" && (
+        <div className="animate-fade-in-up space-y-5">
+          <div className="text-center">
+            <h2 className="text-lg font-bold text-gray-900">
+              Round {currentRound} Complete
+            </h2>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleRollbackAll}
-              className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-xl transition-colors border border-red-200"
-            >
-              Rollback All
-            </button>
-            <button
-              onClick={handleCleanup}
-              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
-            >
-              Clean Up Backups
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              setSession(null);
-              setSessionId(null);
-              setQueue([]);
-              setCurrent(null);
-              setShowSummary(false);
-              setInferenceStatus("ready");
-            }}
-            className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
-          >
-            Start New Session
-          </button>
+
+          {roundSummary && (
+            <>
+              <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <StatBox
+                    value={roundSummary.accepted}
+                    label="Accepted"
+                    sub="GPS written"
+                    color="text-emerald-600"
+                  />
+                  <StatBox
+                    value={roundSummary.rejected}
+                    label="Declined"
+                    color="text-gray-500"
+                  />
+                  <StatBox
+                    value={roundSummary.auto_skipped}
+                    label="Auto-skipped"
+                    sub="Below threshold"
+                    color="text-gray-400"
+                  />
+                </div>
+              </div>
+
+              {roundSummary.remaining_unlocated > 0 && (
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-2">
+                  <p className="text-sm font-medium text-blue-800">
+                    Why another round helps
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    You just accepted{" "}
+                    <strong>{roundSummary.accepted} new GPS locations</strong>.
+                    Photos taken close in time to these newly-located photos may
+                    now be predictable. For example, if you accepted a photo
+                    from 14:02 and there's an unlocated photo from 14:04, it can
+                    now use the accepted location as context — potentially
+                    pushing it above the confidence threshold.
+                  </p>
+                  <p className="text-xs text-blue-600 font-medium">
+                    {roundSummary.remaining_unlocated} photos still without GPS.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                {roundSummary.remaining_unlocated > 0 &&
+                  roundSummary.accepted > 0 && (
+                    <button
+                      onClick={handleStartRound}
+                      className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all shadow-sm hover:shadow-md"
+                    >
+                      Start Round {currentRound + 1}
+                    </button>
+                  )}
+                <button
+                  onClick={() => setStep("session_complete")}
+                  className={`${roundSummary.remaining_unlocated > 0 && roundSummary.accepted > 0 ? "flex-1" : "w-full"} py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors`}
+                >
+                  Finish Session
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
+
+      {/* ============ STEP: SESSION COMPLETE ============ */}
+      {step === "session_complete" && (
+        <div className="animate-fade-in-up space-y-5">
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-bold text-gray-900">
+              Session Complete
+            </h2>
+            <p className="text-sm text-gray-500">
+              {currentRound > 0
+                ? `Completed ${currentRound} round${currentRound > 1 ? "s" : ""} of analysis`
+                : "No photos to process"}
+            </p>
+          </div>
+
+          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 space-y-4">
+            <div className="flex gap-2">
+              <button
+                onClick={handleRollbackAll}
+                className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-xl transition-colors border border-red-200"
+              >
+                Rollback All
+              </button>
+              <button
+                onClick={handleCleanup}
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+              >
+                Clean Up Backups
+              </button>
+            </div>
+            <button
+              onClick={resetSession}
+              className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+            >
+              Start New Session
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---- Helper components ---- */
+
+function StepExplainer({
+  num,
+  title,
+  desc,
+}: {
+  num: number;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="bg-gray-50 rounded-xl p-3 text-center">
+      <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold flex items-center justify-center mx-auto mb-2">
+        {num}
+      </div>
+      <p className="text-sm font-semibold text-gray-800">{title}</p>
+      <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+function StatBox({
+  value,
+  label,
+  sub,
+  color,
+}: {
+  value: number;
+  label: string;
+  sub?: string;
+  color?: string;
+}) {
+  return (
+    <div className="bg-gray-50 rounded-2xl p-3">
+      <p
+        className={`text-2xl font-bold tabular-nums ${color || "text-gray-900"}`}
+      >
+        {value}
+      </p>
+      <p className="text-[10px] text-gray-400 uppercase tracking-wider">
+        {label}
+      </p>
+      {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
     </div>
   );
 }

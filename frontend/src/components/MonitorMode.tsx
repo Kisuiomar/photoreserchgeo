@@ -5,7 +5,6 @@ import type { ScanResults, ScanStatus } from "../types";
 import ScanControls from "./monitor/ScanControls";
 import ScanMap from "./monitor/ScanMap";
 import ScanStats from "./monitor/ScanStats";
-import SnapshotPanel from "./monitor/SnapshotPanel";
 
 export default function MonitorMode() {
   const [directory, setDirectory] = useState("");
@@ -14,8 +13,6 @@ export default function MonitorMode() {
   const [results, setResults] = useState<ScanResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  /* ---- start scan ---- */
 
   const handleScan = useCallback(async () => {
     setError(null);
@@ -37,8 +34,6 @@ export default function MonitorMode() {
       setError(err instanceof Error ? err.message : "Failed to start scan");
     }
   }, [directory]);
-
-  /* ---- poll status ---- */
 
   useEffect(() => {
     if (!scanId || !status || status.status !== "scanning") return;
@@ -63,8 +58,6 @@ export default function MonitorMode() {
     return () => clearInterval(poll);
   }, [scanId, status?.status]);
 
-  /* ---- CSV export ---- */
-
   const handleExport = useCallback(() => {
     if (!results) return;
     const header =
@@ -82,7 +75,7 @@ export default function MonitorMode() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `geoscope-scan-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `library-scan-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }, [results]);
@@ -92,7 +85,7 @@ export default function MonitorMode() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm">
+        <div className="p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm animate-slide-down">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
@@ -109,14 +102,14 @@ export default function MonitorMode() {
         <>
           <ScanStats results={results} onExport={handleExport} />
           <ScanMap gpsImages={results.gps_images} />
-          <SnapshotPanel scanId={scanId} hasResults={!!results} />
         </>
       )}
 
       {!results && !scanning && (
         <div className="text-center py-16">
           <p className="text-gray-400 text-sm">
-            Enter a directory path and click Scan to analyze your photo library
+            Scan your photo library to see GPS coverage, format breakdown, and
+            photo locations on a map.
           </p>
         </div>
       )}

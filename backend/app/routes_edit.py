@@ -1,8 +1,8 @@
-"""FastAPI router for Edit Mode endpoints."""
+"""FastAPI router for Edit Mode endpoints — round-based GPS prediction."""
 
 import os
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -20,6 +20,8 @@ router = APIRouter(prefix="/api")
 
 class EditStartRequest(BaseModel):
     directory: str = ""
+    threshold: float = 0.3
+    include_predicted: bool = False
 
 
 class ManualReviewRequest(BaseModel):
@@ -49,7 +51,6 @@ def _resolve_path(directory: str) -> str:
 
 
 def _require_edit_mode() -> None:
-    """Raise 403 if edit mode is disabled."""
     if not settings.edit_mode_enabled:
         raise StarletteHTTPException(
             403,
@@ -65,14 +66,18 @@ def _require_edit_mode() -> None:
 @router.post("/edit/start")
 async def start_edit(body: EditStartRequest) -> dict:
     target = _resolve_path(body.directory)
-    return edit_manager.create_session(target)
+    return edit_manager.create_session(
+        target,
+        threshold=body.threshold,
+        include_predicted=body.include_predicted,
+    )
 
 
-@router.post("/edit/{session_id}/run")
-async def run_inference(session_id: str) -> dict:
+@router.post("/edit/{session_id}/round")
+async def start_round(session_id: str) -> dict:
+    """Start a new round of inference."""
     try:
-        edit_manager.start_inference(session_id)
-        return {"status": "running", "session_id": session_id}
+        return edit_manager.start_round(session_id)
     except (RuntimeError, ValueError) as exc:
         raise StarletteHTTPException(409, str(exc))
 
@@ -103,18 +108,11 @@ async def edit_status(session_id: str) -> dict:
     return status
 
 
-@router.get("/edit/sessions")
-async def list_sessions() -> list[dict]:
-    return edit_manager.list_sessions()
-
-
-@router.get("/edit/{session_id}")
-async def get_session(session_id: str) -> dict:
-    session = edit_manager.get_session(session_id)
-    if session is None:
-        raise StarletteHTTPException(404, "Session not found")
-    summary = {k: v for k, v in session.items() if k != "queue"}
-    summary["queue_length"] = len(session["queue"])
+@router.get("/edit/{session_id}/round/{round_num}/summary")
+async def round_summary(session_id: str, round_num: int) -> dict:
+    summary = edit_manager.get_round_summary(session_id, round_num)
+    if summary is None:
+        raise StarletteHTTPException(404, "Round not found")
     return summary
 
 
@@ -124,15 +122,9 @@ async def get_session(session_id: str) -> dict:
 
 
 @router.get("/edit/{session_id}/queue")
-async def get_queue(
-    session_id: str,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=200),
-) -> dict:
-    items = edit_manager.get_queue(session_id, offset, limit)
-    session = edit_manager.get_session(session_id)
-    total = len(session["queue"]) if session else 0
-    return {"items": items, "total": total, "offset": offset, "limit": limit}
+async def get_queue(session_id: str) -> dict:
+    items = edit_manager.get_queue(session_id)
+    return {"items": items, "total": len(items)}
 
 
 @router.get("/edit/{session_id}/queue/next")
@@ -152,7 +144,7 @@ async def next_for_review(session_id: str) -> dict:
 async def accept_review(session_id: str, image_id: str) -> dict:
     item = edit_manager.review_accept(session_id, image_id)
     if item is None:
-        raise StarletteHTTPException(404, "Image not found in queue")
+        raise StarletteHTTPException(404, "Image not found or not reviewable")
     return {
         "status": "accepted",
         "image_id": image_id,
@@ -164,7 +156,7 @@ async def accept_review(session_id: str, image_id: str) -> dict:
 async def reject_review(session_id: str, image_id: str) -> dict:
     item = edit_manager.review_reject(session_id, image_id)
     if item is None:
-        raise StarletteHTTPException(404, "Image not found in queue")
+        raise StarletteHTTPException(404, "Image not found or not reviewable")
     return {"status": "rejected", "image_id": image_id}
 
 
@@ -190,7 +182,7 @@ async def manual_review(
 
     item = edit_manager.review_manual(session_id, image_id, lat, lon)
     if item is None:
-        raise StarletteHTTPException(404, "Image not found in queue")
+        raise StarletteHTTPException(404, "Image not found")
 
     addr = geocoder.lookup(lat, lon)
     return {
@@ -207,15 +199,6 @@ async def manual_review(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/edit/{session_id}/apply")
-async def apply_all(session_id: str) -> dict:
-    _require_edit_mode()
-    try:
-        return edit_manager.apply_all(session_id)
-    except ValueError as exc:
-        raise StarletteHTTPException(404, str(exc))
-
-
 @router.post("/edit/{session_id}/apply/{image_id}")
 async def apply_single(session_id: str, image_id: str) -> dict:
     _require_edit_mode()
@@ -228,15 +211,6 @@ async def apply_single(session_id: str, image_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # Rollback
 # ---------------------------------------------------------------------------
-
-
-@router.post("/edit/{session_id}/rollback/{image_id}")
-async def rollback_single(session_id: str, image_id: str) -> dict:
-    _require_edit_mode()
-    try:
-        return edit_manager.rollback_single(session_id, image_id)
-    except ValueError as exc:
-        raise StarletteHTTPException(404, str(exc))
 
 
 @router.post("/edit/{session_id}/rollback-all")

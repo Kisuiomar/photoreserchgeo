@@ -115,37 +115,4 @@ export interface ScanResults {
   gps_images: GpsImage[];
 }
 
-export interface SnapshotMeta {
-  name: string;
-  created_at: string;
-  total_images: number;
-  with_gps: number;
-}
-
-export interface ComparisonResult {
-  snapshot_a: string;
-  snapshot_b: string;
-  images_added: ScanImage[];
-  images_removed: ScanImage[];
-  gps_added: {
-    path: string;
-    new_coordinates: { lat: number; lon: number } | null;
-  }[];
-  gps_removed: {
-    path: string;
-    old_coordinates: { lat: number; lon: number } | null;
-  }[];
-  gps_changed: {
-    path: string;
-    old_coordinates: { lat: number; lon: number } | null;
-    new_coordinates: { lat: number; lon: number } | null;
-  }[];
-  estimated_added: {
-    path: string;
-    coordinates: { lat: number; lon: number } | null;
-  }[];
-  summary: Record<string, number>;
-  warnings: string[];
-}
-
 export type AppMode = "testing" | "monitor" | "edit";

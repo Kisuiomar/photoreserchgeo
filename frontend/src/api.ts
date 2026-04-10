@@ -1,10 +1,4 @@
-import type {
-  AnalysisResult,
-  ComparisonResult,
-  ScanResults,
-  ScanStatus,
-  SnapshotMeta,
-} from "./types";
+import type { AnalysisResult, ScanResults, ScanStatus } from "./types";
 
 const API_TIMEOUT = 600_000;
 
@@ -48,7 +42,7 @@ export async function checkHealth(): Promise<{
   return res.json();
 }
 
-/* ---- Monitor mode ---- */
+/* ---- Overview / Monitor mode ---- */
 
 export async function startScan(
   directory: string,
@@ -77,53 +71,30 @@ export async function getScanResults(scanId: string): Promise<ScanResults> {
   return res.json();
 }
 
-export async function saveSnapshot(
-  scanId: string,
-  name: string,
-): Promise<SnapshotMeta> {
-  const res = await fetch(`/api/scan/${scanId}/snapshot`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) throw new Error("Failed to save snapshot");
-  return res.json();
-}
-
-export async function listSnapshots(): Promise<SnapshotMeta[]> {
-  const res = await fetch("/api/snapshots");
-  if (!res.ok) throw new Error("Failed to list snapshots");
-  return res.json();
-}
-
-export async function compareSnapshots(
-  a: string,
-  b: string,
-): Promise<ComparisonResult> {
-  const res = await fetch(
-    `/api/snapshots/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`,
-  );
-  if (!res.ok) throw new Error("Failed to compare snapshots");
-  return res.json();
-}
-
 /* ---- Edit mode ---- */
 
-export async function editStart(directory: string): Promise<{
+export async function editStart(
+  directory: string,
+  threshold: number,
+  includePredicted: boolean,
+): Promise<{
   session_id: string;
   total_images: number;
-  gps_images_skipped: number;
-  to_process: number;
+  real_gps_count: number;
+  predicted_gps_count: number;
+  no_gps_count: number;
   disagreements: number;
-  warnings: string[];
   status: string;
-  library_hints_found?: number;
-  burst_hints?: number;
+  warnings: string[];
 }> {
   const res = await fetch("/api/edit/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ directory }),
+    body: JSON.stringify({
+      directory,
+      threshold,
+      include_predicted: includePredicted,
+    }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "Failed" }));
@@ -132,12 +103,18 @@ export async function editStart(directory: string): Promise<{
   return res.json();
 }
 
-export async function editRun(sessionId: string): Promise<void> {
-  const res = await fetch(`/api/edit/${sessionId}/run`, { method: "POST" });
+export async function editStartRound(sessionId: string): Promise<{
+  round: number;
+  candidates: number;
+  reference_gps: number;
+  status: string;
+}> {
+  const res = await fetch(`/api/edit/${sessionId}/round`, { method: "POST" });
   if (!res.ok) {
     const b = await res.json().catch(() => ({ error: "Failed" }));
-    throw new Error(b.error || "Failed to start inference");
+    throw new Error(b.error || "Failed to start round");
   }
+  return res.json();
 }
 
 export async function editPause(sessionId: string): Promise<void> {
@@ -151,9 +128,12 @@ export async function editResume(sessionId: string): Promise<void> {
 export async function editStatus(sessionId: string): Promise<{
   session_id: string;
   status: string;
+  current_round: number;
   processed: number;
   remaining: number;
   total: number;
+  above_threshold: number;
+  below_threshold: number;
   current_image: string | null;
 }> {
   const res = await fetch(`/api/edit/${sessionId}/status`);
@@ -161,16 +141,37 @@ export async function editStatus(sessionId: string): Promise<{
   return res.json();
 }
 
-export async function editQueue(
+export async function editRoundSummary(
   sessionId: string,
-  offset = 0,
-  limit = 200,
+  roundNum: number,
 ): Promise<{
+  round_num: number;
+  status: string;
+  total_candidates: number;
+  above_threshold: number;
+  below_threshold: number;
+  accepted: number;
+  rejected: number;
+  pending_review: number;
+  auto_skipped: number;
+  remaining_unlocated: number;
+  reference_gps_count: number;
+}> {
+  const res = await fetch(`/api/edit/${sessionId}/round/${roundNum}/summary`);
+  if (!res.ok) throw new Error("Failed");
+  return res.json();
+}
+
+export async function editQueue(sessionId: string): Promise<{
   items: Array<{
     image_id: string;
     path: string;
     filename: string;
     status: string;
+    combined_score: number | null;
+    model_confidence: number | null;
+    temporal_confidence: number | null;
+    temporal_source: string | null;
     predictions: Array<{
       rank: number;
       lat: number;
@@ -180,13 +181,10 @@ export async function editQueue(
     }> | null;
     review_decision: string | null;
     review_coordinates: { lat: number; lon: number } | null;
-    processed_at: string | null;
   }>;
   total: number;
 }> {
-  const res = await fetch(
-    `/api/edit/${sessionId}/queue?offset=${offset}&limit=${limit}`,
-  );
+  const res = await fetch(`/api/edit/${sessionId}/queue`);
   if (!res.ok) throw new Error("Failed");
   return res.json();
 }
@@ -195,6 +193,10 @@ export async function editQueueNext(sessionId: string): Promise<{
   image_id: string;
   filename: string;
   thumbnail_base64: string;
+  combined_score: number;
+  model_confidence: number;
+  temporal_confidence: number;
+  temporal_source: string | null;
   predictions: Array<{
     rank: number;
     lat: number;
@@ -286,20 +288,5 @@ export async function editCleanupBackups(
     method: "POST",
   });
   if (!res.ok) throw new Error("Cleanup failed");
-  return res.json();
-}
-
-export async function geocodeAddress(
-  address: string,
-): Promise<{ lat: number; lon: number; display_name: string }> {
-  const res = await fetch("/api/geocode", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address }),
-  });
-  if (!res.ok) {
-    const b = await res.json().catch(() => ({ error: "Geocoding failed" }));
-    throw new Error(b.error || "Geocoding failed");
-  }
   return res.json();
 }
