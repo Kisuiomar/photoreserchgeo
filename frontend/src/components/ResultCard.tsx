@@ -82,18 +82,18 @@ export default function ResultCard({ result }: Props) {
     metaFields.push(["Dimensions", `${meta.width} \u00D7 ${meta.height}`]);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
       {/* header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
         {result.imageUrl && (
           <img
             src={result.imageUrl}
             alt={result.filename}
-            className="w-9 h-9 rounded-lg object-cover flex-shrink-0 ring-1 ring-gray-200"
+            className="w-9 h-9 rounded-lg object-cover flex-shrink-0 ring-1 ring-gray-200 dark:ring-gray-700"
           />
         )}
         <span
-          className="text-sm font-medium text-gray-800 truncate flex-1"
+          className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate flex-1"
           title={result.filename}
         >
           {result.filename}
@@ -102,8 +102,8 @@ export default function ResultCard({ result }: Props) {
         <span
           className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
             meta.has_gps
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-gray-100 text-gray-400"
+              ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
           }`}
         >
           <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
@@ -116,7 +116,7 @@ export default function ResultCard({ result }: Props) {
           GPS
         </span>
 
-        <span className="text-xs text-gray-400 tabular-nums flex-shrink-0">
+        <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums flex-shrink-0">
           {fmtTime(result.processing_time_ms)}
         </span>
       </div>
@@ -124,7 +124,7 @@ export default function ResultCard({ result }: Props) {
       {/* body */}
       <div className="flex">
         {/* left column */}
-        <div className="w-72 flex-shrink-0 border-r border-gray-100 p-4 flex flex-col gap-3">
+        <div className="w-72 flex-shrink-0 border-r border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-3">
           {result.imageUrl && (
             <img
               src={result.imageUrl}
@@ -135,17 +135,17 @@ export default function ResultCard({ result }: Props) {
 
           {/* Predicted location card */}
           {top && (
-            <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100 p-3">
+            <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50/50 dark:from-blue-950/50 dark:to-indigo-950/30 border border-blue-100 dark:border-blue-900 p-3">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                 <h4 className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
                   Predicted
                 </h4>
               </div>
-              <p className="text-sm font-semibold text-gray-900 leading-snug">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">
                 {formatAddr(top)}
               </p>
-              <p className="text-[11px] text-gray-400 font-mono mt-0.5">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-mono mt-0.5">
                 {coord(top.lat, top.lon)}
               </p>
               <GoogleMapsLink lat={top.lat} lon={top.lon} className="mt-1.5" />
@@ -157,14 +157,14 @@ export default function ResultCard({ result }: Props) {
 
           {/* Actual location card */}
           {result.real_location && (
-            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50/50 border border-emerald-100 p-3">
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50/50 dark:from-emerald-950/50 dark:to-green-950/30 border border-emerald-100 dark:border-emerald-900 p-3">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
                 <h4 className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
                   Actual (EXIF)
                 </h4>
               </div>
-              <p className="text-sm font-medium text-gray-800 leading-snug">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug">
                 {result.real_location.address
                   ? [
                       result.real_location.address.city,
@@ -227,7 +227,7 @@ export default function ResultCard({ result }: Props) {
 
         {/* right column */}
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="h-96 border-b border-gray-100">
+          <div className="h-96 border-b border-gray-100 dark:border-gray-800">
             <PredictionMap
               predictions={result.predictions}
               realLocation={result.real_location}
@@ -258,7 +258,7 @@ function BenchmarkSection({ benchmark }: { benchmark: Benchmark }) {
   const showBest = benchmark.best_prediction_rank !== 1;
 
   return (
-    <section className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl p-3 border border-gray-100">
+    <section className="bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-800 dark:to-blue-950/20 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
       <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
         Benchmark
       </h4>

@@ -7,6 +7,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f9fafb;
+  transition: background-color 0.3s ease;
+}
+
+.dark body,
+html.dark body {
+  background-color: #030712;
 }
 
 /* custom scrollbar */
@@ -145,6 +151,10 @@ body {
   background: white;
   border-radius: 1rem;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.dark .upload-zone {
+  background: #111827;
 }
 
 .upload-zone::before {

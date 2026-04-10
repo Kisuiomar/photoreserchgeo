@@ -7,3 +7,4 @@ reverse_geocoder
 Pillow
 pycountry
 geopy
+psutil

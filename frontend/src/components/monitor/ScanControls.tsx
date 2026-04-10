@@ -70,7 +70,7 @@ export default function ScanControls({
           onChange={(e) => onDirectoryChange(e.target.value)}
           placeholder="Directory path (leave empty to scan all)"
           disabled={scanning}
-          className="flex-1 bg-white border border-gray-200 shadow-sm rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-400 disabled:opacity-50 transition-colors"
+          className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-xl px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-400 dark:focus:border-indigo-500 disabled:opacity-50 transition-colors"
         />
         <button
           onClick={onScan}
@@ -89,7 +89,7 @@ export default function ScanControls({
       </div>
 
       {status && status.status === "scanning" && (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 space-y-2">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-700">Scanning images…</span>
             <span className="text-sm font-semibold text-gray-900 tabular-nums">

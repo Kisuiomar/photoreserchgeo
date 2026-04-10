@@ -138,7 +138,7 @@ export default function TestingMode() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {error && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm flex items-center justify-between animate-slide-down">
+        <div className="mb-6 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-2xl shadow-sm flex items-center justify-between animate-slide-down">
           <p className="text-sm text-red-600">{error}</p>
           <button
             onClick={retry}
@@ -152,7 +152,7 @@ export default function TestingMode() {
       {collapsed && results.length > 0 ? (
         <button
           onClick={() => setCollapsed(false)}
-          className="w-full text-center py-4 border border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all duration-300"
+          className="w-full text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 transition-all duration-300"
         >
           + Upload more images
         </button>
@@ -169,7 +169,7 @@ export default function TestingMode() {
           {pendingCount > 0 && !processing && (
             <button
               onClick={runAnalysis}
-              className="mt-6 w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 active:scale-[0.99]"
+              className="mt-6 w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 dark:hover:shadow-indigo-900 active:scale-[0.99]"
             >
               Run Analysis{pendingCount > 1 ? ` (${pendingCount} images)` : ""}
             </button>
@@ -202,7 +202,7 @@ export default function TestingMode() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={reset}
-            className="text-xs text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all duration-200"
+            className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
           >
             Clear All
           </button>
@@ -211,7 +211,7 @@ export default function TestingMode() {
 
       {results.length > 0 && (
         <section className="mt-4 space-y-4">
-          <div className="border border-gray-200 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up">
+          <div className="border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up">
             <OverviewMap results={results} onMarkerClick={scrollToCard} />
           </div>
           <div
@@ -220,7 +220,7 @@ export default function TestingMode() {
           >
             <StatsPanel results={results} onRowClick={scrollToCard} />
           </div>
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider pt-2">
+          <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider pt-2">
             Results ({results.length})
           </h2>
           {results.map((r, i) => (

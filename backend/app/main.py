@@ -93,6 +93,34 @@ async def health() -> dict:
     return {"status": "ok", "model_loaded": model.is_loaded()}
 
 
+@app.get("/api/system-status")
+async def system_status() -> dict:
+    """Return memory usage and model state for the header indicator."""
+    import os
+    import psutil
+
+    proc = psutil.Process(os.getpid())
+    mem = psutil.virtual_memory()
+    proc_rss = proc.memory_info().rss
+
+    loaded = model.is_loaded()
+    # Determine model state
+    # "not_downloaded" can't easily be detected at runtime so we skip it
+    if loaded:
+        state = "loaded"  # in memory, ready to use
+    else:
+        state = "idle"  # downloaded but not loaded
+
+    return {
+        "memory_used_gb": round(mem.used / (1024**3), 1),
+        "memory_total_gb": round(mem.total / (1024**3), 1),
+        "memory_percent": mem.percent,
+        "process_memory_gb": round(proc_rss / (1024**3), 2),
+        "model_state": state,
+        "model_loaded": loaded,
+    }
+
+
 @app.post("/api/unload-models")
 async def unload_models() -> dict:
     was = model.is_loaded()

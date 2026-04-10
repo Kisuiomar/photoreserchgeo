@@ -20,7 +20,7 @@ export default function FilePreview({ files, onRemove, disabled }: Props) {
       {files.map((f, i) => (
         <div
           key={f.id}
-          className="flex items-center gap-3 bg-white border border-gray-200 shadow-sm rounded-2xl p-2 pr-3 animate-slide-in hover:border-gray-300 transition-colors duration-200"
+          className="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl p-2 pr-3 animate-slide-in hover:border-gray-300 dark:hover:border-gray-700 transition-colors duration-200"
           style={{
             animationDelay: `${i * 50}ms`,
             animationFillMode: "backwards",
@@ -33,10 +33,15 @@ export default function FilePreview({ files, onRemove, disabled }: Props) {
           />
 
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-800 truncate" title={f.file.name}>
+            <p
+              className="text-sm text-gray-800 dark:text-gray-200 truncate"
+              title={f.file.name}
+            >
               {f.file.name}
             </p>
-            <p className="text-xs text-gray-400">{fmt(f.file.size)}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              {fmt(f.file.size)}
+            </p>
           </div>
 
           {f.status === "processing" && (

@@ -94,10 +94,10 @@ export default function ReviewCard({
   }, [address, onManual]);
 
   return (
-    <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl overflow-hidden">
       <div className="flex">
         {/* Left: image */}
-        <div className="w-80 flex-shrink-0 p-4 border-r border-gray-100">
+        <div className="w-80 flex-shrink-0 p-4 border-r border-gray-100 dark:border-gray-800">
           {thumbnail && (
             <img
               src={`data:image/jpeg;base64,${thumbnail}`}
@@ -105,7 +105,10 @@ export default function ReviewCard({
               className="w-full rounded-xl object-contain bg-gray-100 max-h-72"
             />
           )}
-          <p className="text-sm text-gray-700 mt-3 truncate" title={filename}>
+          <p
+            className="text-sm text-gray-700 dark:text-gray-300 mt-3 truncate"
+            title={filename}
+          >
             {filename}
           </p>
 
@@ -183,7 +186,7 @@ export default function ReviewCard({
           </div>
 
           {/* Actions */}
-          <div className="p-4 border-t border-gray-100 space-y-3">
+          <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-3">
             {feedback && (
               <p
                 className={`text-sm font-medium ${feedback.startsWith("GPS") ? "text-emerald-600" : feedback.startsWith("Skipped") ? "text-gray-500" : "text-blue-600"}`}

@@ -22,10 +22,10 @@ export default function ScanStats({ results, onExport }: Props) {
   );
 
   return (
-    <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-800">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
             Library Statistics
           </h3>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -135,7 +135,7 @@ export default function ScanStats({ results, onExport }: Props) {
               {formatEntries.map(([fmt, count]) => (
                 <span
                   key={fmt}
-                  className="px-2.5 py-1 bg-gray-100 rounded-lg text-xs text-gray-700"
+                  className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs text-gray-700"
                 >
                   .{fmt}{" "}
                   <span className="text-gray-400">
@@ -190,7 +190,7 @@ export default function ScanStats({ results, onExport }: Props) {
                     {results.by_directory.map((d) => (
                       <tr
                         key={d.directory}
-                        className="border-b border-gray-100"
+                        className="border-b border-gray-100 dark:border-gray-800"
                       >
                         <td
                           className="py-1.5 pr-3 text-gray-700 truncate max-w-[300px]"
@@ -232,7 +232,7 @@ function StatBox({
   color?: string;
 }) {
   return (
-    <div className="bg-gray-50 rounded-2xl p-3 text-center">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
       <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">
         {label}
       </p>

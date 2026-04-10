@@ -47,7 +47,7 @@ export default function ScanMap({ gpsImages }: Props) {
   if (points.length === 0) return null;
 
   return (
-    <div className="border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
       <MapContainer
         center={[20, 0]}
         zoom={2}

@@ -309,7 +309,7 @@ export default function EditMode() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm animate-slide-down">
+        <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl shadow-sm animate-slide-down">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
@@ -318,18 +318,18 @@ export default function EditMode() {
       {step === "config" && (
         <div className="animate-fade-in space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               Add GPS to Your Photos
             </h2>
-            <p className="text-sm text-gray-500 max-w-xl mx-auto">
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
               Predict locations for photos without GPS coordinates using AI and
               temporal context from nearby photos.
             </p>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 space-y-5">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl p-5 space-y-5">
             <div>
-              <h3 className="text-sm font-semibold text-gray-800 mb-3">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">
                 How it works
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -363,7 +363,7 @@ export default function EditMode() {
                   value={directory}
                   onChange={(e) => setDirectory(e.target.value)}
                   placeholder="Leave empty to scan all photos"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 transition-colors"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-colors"
                 />
               </div>
 
@@ -417,8 +417,8 @@ export default function EditMode() {
             </button>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <p className="text-xs text-amber-700">
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
+            <p className="text-xs text-amber-700 dark:text-amber-300">
               <strong>Safety guarantee:</strong> Photos with real GPS
               coordinates from your camera are never modified. Only photos
               without any GPS data (or with previously predicted GPS, if the
@@ -433,7 +433,7 @@ export default function EditMode() {
       {step === "scanned" && session && (
         <div className="animate-fade-in-up space-y-5">
           <div className="text-center">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Round 1 — Ready to Analyze
             </h2>
             <p className="text-sm text-gray-500 mt-1">
@@ -441,7 +441,7 @@ export default function EditMode() {
             </p>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl p-5">
             <div className="grid grid-cols-3 gap-3 text-center">
               <StatBox
                 value={session.real_gps_count}
@@ -475,8 +475,8 @@ export default function EditMode() {
             )}
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-            <p className="text-xs text-blue-700">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-2xl p-4">
+            <p className="text-xs text-blue-700 dark:text-blue-300">
               The AI will analyze <strong>{session.no_gps_count} photos</strong>{" "}
               without GPS and use the{" "}
               <strong>{session.real_gps_count} GPS-tagged photos</strong> as
@@ -501,7 +501,7 @@ export default function EditMode() {
       {step === "processing" && (
         <div className="animate-fade-in space-y-4">
           <div className="text-center">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Round {currentRound} — Analyzing
             </h2>
             <p className="text-sm text-gray-500 mt-1">
@@ -559,7 +559,7 @@ export default function EditMode() {
       {step === "review" && current && (
         <div className="animate-fade-in-up space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Round {currentRound} — Review Predictions
             </h2>
             <span className="text-xs text-gray-400">
@@ -568,8 +568,8 @@ export default function EditMode() {
           </div>
 
           {current.temporal_source && (
-            <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2">
-              <p className="text-xs text-indigo-700">
+            <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900 rounded-xl px-3 py-2">
+              <p className="text-xs text-indigo-700 dark:text-indigo-300">
                 <strong>Temporal context:</strong>{" "}
                 {current.temporal_source === "burst"
                   ? "A GPS-tagged photo was taken within 5 minutes of this one — high confidence."
@@ -603,14 +603,14 @@ export default function EditMode() {
       {step === "round_complete" && (
         <div className="animate-fade-in-up space-y-5">
           <div className="text-center">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Round {currentRound} Complete
             </h2>
           </div>
 
           {roundSummary && (
             <>
-              <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl p-5">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <StatBox
                     value={roundSummary.accepted}
@@ -633,11 +633,11 @@ export default function EditMode() {
               </div>
 
               {roundSummary.remaining_unlocated > 0 && (
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-2">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-2xl p-4 space-y-2">
                   <p className="text-sm font-medium text-blue-800">
                     Why another round helps
                   </p>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
                     You just accepted{" "}
                     <strong>{roundSummary.accepted} new GPS locations</strong>.
                     Photos taken close in time to these newly-located photos may
@@ -664,7 +664,7 @@ export default function EditMode() {
                   )}
                 <button
                   onClick={() => setStep("session_complete")}
-                  className={`${roundSummary.remaining_unlocated > 0 && roundSummary.accepted > 0 ? "flex-1" : "w-full"} py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors`}
+                  className={`${roundSummary.remaining_unlocated > 0 && roundSummary.accepted > 0 ? "flex-1" : "w-full"} py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors`}
                 >
                   Finish Session
                 </button>
@@ -678,7 +678,7 @@ export default function EditMode() {
       {step === "session_complete" && (
         <div className="animate-fade-in-up space-y-5">
           <div className="text-center space-y-1">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Session Complete
             </h2>
             <p className="text-sm text-gray-500">
@@ -688,7 +688,7 @@ export default function EditMode() {
             </p>
           </div>
 
-          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 space-y-4">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl p-5 space-y-4">
             <div className="flex gap-2">
               <button
                 onClick={handleRollbackAll}
@@ -698,14 +698,14 @@ export default function EditMode() {
               </button>
               <button
                 onClick={handleCleanup}
-                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+                className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl transition-colors"
               >
                 Clean Up Backups
               </button>
             </div>
             <button
               onClick={resetSession}
-              className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+              className="w-full py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl transition-colors"
             >
               Start New Session
             </button>
@@ -728,11 +728,13 @@ function StepExplainer({
   desc: string;
 }) {
   return (
-    <div className="bg-gray-50 rounded-xl p-3 text-center">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
       <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold flex items-center justify-center mx-auto mb-2">
         {num}
       </div>
-      <p className="text-sm font-semibold text-gray-800">{title}</p>
+      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        {title}
+      </p>
       <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">{desc}</p>
     </div>
   );
@@ -750,7 +752,7 @@ function StatBox({
   color?: string;
 }) {
   return (
-    <div className="bg-gray-50 rounded-2xl p-3">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
       <p
         className={`text-2xl font-bold tabular-nums ${color || "text-gray-900"}`}
       >

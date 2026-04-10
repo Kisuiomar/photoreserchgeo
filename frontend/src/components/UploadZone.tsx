@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
+import HelpTip from "./HelpTip";
+
 const ACCEPTED_EXTENSIONS = [
   ".jpg",
   ".jpeg",
@@ -122,8 +124,8 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
         {isDragOver ? (
           <div className="animate-scale-in">
             <div className="relative w-16 h-16 mx-auto mb-4">
-              <div className="absolute inset-0 rounded-full bg-indigo-100 animate-pulse-ring" />
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+              <div className="absolute inset-0 rounded-full bg-indigo-100 dark:bg-indigo-900 animate-pulse-ring" />
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900">
                 <svg
                   className="w-7 h-7 text-white"
                   fill="none"
@@ -145,9 +147,9 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
           </div>
         ) : (
           <>
-            <div className="animate-float w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 flex items-center justify-center">
+            <div className="animate-float w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center">
               <svg
-                className="w-7 h-7 text-indigo-400"
+                className="w-7 h-7 text-indigo-400 dark:text-indigo-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -160,12 +162,12 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
                 />
               </svg>
             </div>
-            <p className="text-base font-semibold text-gray-700">
+            <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
               Drop images here to analyze
             </p>
-            <p className="text-sm text-gray-400 mt-1.5">
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1.5">
               or{" "}
-              <span className="text-indigo-500 font-medium hover:text-indigo-600 transition-colors">
+              <span className="text-indigo-500 dark:text-indigo-400 font-medium hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                 browse files
               </span>
             </p>
@@ -173,11 +175,12 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
               {["JPG", "PNG", "WebP", "TIFF", "BMP"].map((fmt) => (
                 <span
                   key={fmt}
-                  className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md"
+                  className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md"
                 >
                   {fmt}
                 </span>
               ))}
+              <HelpTip text="Supported image formats. HEIC support varies by system. Maximum 50 files per batch, 50 MB per file." />
             </div>
           </>
         )}
