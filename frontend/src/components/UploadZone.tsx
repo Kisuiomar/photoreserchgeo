@@ -105,13 +105,8 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
           setIsDragOver(false);
         }}
         className={`
-          relative cursor-pointer rounded-xl border-2 border-dashed
-          transition-all duration-200 py-14 px-6 text-center
-          ${
-            isDragOver
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-300 hover:border-gray-400 bg-gray-50/50"
-          }
+          upload-zone cursor-pointer py-16 px-6 text-center
+          ${isDragOver ? "upload-zone-active" : ""}
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
@@ -125,36 +120,73 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
         />
 
         {isDragOver ? (
-          <p className="text-lg text-blue-600 font-medium">Drop images here</p>
+          <div className="animate-scale-in">
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 rounded-full bg-indigo-100 animate-pulse-ring" />
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                <svg
+                  className="w-7 h-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
+                </svg>
+              </div>
+            </div>
+            <p className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+              Drop to analyze
+            </p>
+          </div>
         ) : (
           <>
-            <svg
-              className="w-10 h-10 mx-auto mb-3 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-              />
-            </svg>
-            <p className="text-gray-700 font-medium">
-              Drag &amp; drop images here
+            <div className="animate-float w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 flex items-center justify-center">
+              <svg
+                className="w-7 h-7 text-indigo-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21zM9 9.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
+                />
+              </svg>
+            </div>
+            <p className="text-base font-semibold text-gray-700">
+              Drop images here to analyze
             </p>
-            <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+            <p className="text-sm text-gray-400 mt-1.5">
+              or{" "}
+              <span className="text-indigo-500 font-medium hover:text-indigo-600 transition-colors">
+                browse files
+              </span>
+            </p>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {["JPG", "PNG", "WebP", "TIFF", "BMP"].map((fmt) => (
+                <span
+                  key={fmt}
+                  className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md"
+                >
+                  {fmt}
+                </span>
+              ))}
+            </div>
           </>
         )}
       </div>
 
-      <p className="text-xs text-gray-400 mt-2 text-center">
-        JPG, PNG, WebP, TIFF, BMP &middot; Max 50 files per batch
-      </p>
-
       {error && (
-        <p className="text-sm text-red-500 mt-2 text-center">{error}</p>
+        <p className="text-sm text-red-500 mt-3 text-center animate-slide-down">
+          {error}
+        </p>
       )}
     </div>
   );

@@ -124,7 +124,7 @@ export default function ResultCard({ result }: Props) {
       {/* body */}
       <div className="flex">
         {/* left column */}
-        <div className="w-72 flex-shrink-0 border-r border-gray-100 p-4 flex flex-col gap-4">
+        <div className="w-72 flex-shrink-0 border-r border-gray-100 p-4 flex flex-col gap-3">
           {result.imageUrl && (
             <img
               src={result.imageUrl}
@@ -133,11 +133,15 @@ export default function ResultCard({ result }: Props) {
             />
           )}
 
+          {/* Predicted location card */}
           {top && (
-            <section>
-              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                Predicted Location
-              </h4>
+            <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100 p-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <h4 className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
+                  Predicted
+                </h4>
+              </div>
               <p className="text-sm font-semibold text-gray-900 leading-snug">
                 {formatAddr(top)}
               </p>
@@ -148,14 +152,18 @@ export default function ResultCard({ result }: Props) {
               {note && (
                 <p className="text-[11px] text-blue-600 mt-1.5">{note}</p>
               )}
-            </section>
+            </div>
           )}
 
+          {/* Actual location card */}
           {result.real_location && (
-            <section>
-              <h4 className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-1">
-                Actual Location (EXIF)
-              </h4>
+            <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50/50 border border-emerald-100 p-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <h4 className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
+                  Actual (EXIF)
+                </h4>
+              </div>
               <p className="text-sm font-medium text-gray-800 leading-snug">
                 {result.real_location.address
                   ? [
@@ -175,7 +183,7 @@ export default function ResultCard({ result }: Props) {
                 lon={result.real_location.lon}
                 className="mt-1.5"
               />
-            </section>
+            </div>
           )}
 
           {bm && <BenchmarkSection benchmark={bm} />}
@@ -202,7 +210,7 @@ export default function ResultCard({ result }: Props) {
                 Metadata
               </button>
               {metaOpen && (
-                <dl className="mt-2 space-y-1.5">
+                <dl className="mt-2 space-y-1.5 animate-slide-down">
                   {metaFields.map(([k, v]) => (
                     <div key={k}>
                       <dt className="text-[10px] text-gray-400 uppercase tracking-wider">

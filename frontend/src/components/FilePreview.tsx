@@ -17,15 +17,19 @@ export default function FilePreview({ files, onRemove, disabled }: Props) {
 
   return (
     <div className="mt-4 space-y-2 max-h-64 overflow-y-auto pr-1">
-      {files.map((f) => (
+      {files.map((f, i) => (
         <div
           key={f.id}
-          className="flex items-center gap-3 bg-white border border-gray-200 shadow-sm rounded-2xl p-2 pr-3"
+          className="flex items-center gap-3 bg-white border border-gray-200 shadow-sm rounded-2xl p-2 pr-3 animate-slide-in hover:border-gray-300 transition-colors duration-200"
+          style={{
+            animationDelay: `${i * 50}ms`,
+            animationFillMode: "backwards",
+          }}
         >
           <img
             src={f.previewUrl}
             alt={f.file.name}
-            className="w-10 h-10 rounded object-cover flex-shrink-0"
+            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
           />
 
           <div className="flex-1 min-w-0">
@@ -39,7 +43,7 @@ export default function FilePreview({ files, onRemove, disabled }: Props) {
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
           )}
           {f.status === "done" && (
-            <span className="text-emerald-500 flex-shrink-0">
+            <span className="text-emerald-500 flex-shrink-0 animate-check-pop">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -64,7 +68,7 @@ export default function FilePreview({ files, onRemove, disabled }: Props) {
           {f.status === "pending" && !disabled && (
             <button
               onClick={() => onRemove(f.id)}
-              className="text-gray-400 hover:text-gray-700 transition-colors p-1 flex-shrink-0"
+              className="text-gray-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
             >
               <svg
                 className="w-4 h-4"

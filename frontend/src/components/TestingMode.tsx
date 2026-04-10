@@ -138,7 +138,7 @@ export default function TestingMode() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {error && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm flex items-center justify-between">
+        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-2xl shadow-sm flex items-center justify-between animate-slide-down">
           <p className="text-sm text-red-600">{error}</p>
           <button
             onClick={retry}
@@ -152,7 +152,7 @@ export default function TestingMode() {
       {collapsed && results.length > 0 ? (
         <button
           onClick={() => setCollapsed(false)}
-          className="w-full text-center py-3 border border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:text-gray-700 hover:border-gray-400 transition-colors"
+          className="w-full text-center py-4 border border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all duration-300"
         >
           + Upload more images
         </button>
@@ -169,7 +169,7 @@ export default function TestingMode() {
           {pendingCount > 0 && !processing && (
             <button
               onClick={runAnalysis}
-              className="mt-6 w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors"
+              className="mt-6 w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 active:scale-[0.99]"
             >
               Run Analysis{pendingCount > 1 ? ` (${pendingCount} images)` : ""}
             </button>
@@ -202,7 +202,7 @@ export default function TestingMode() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={reset}
-            className="text-xs text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+            className="text-xs text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all duration-200"
           >
             Clear All
           </button>
@@ -211,14 +211,19 @@ export default function TestingMode() {
 
       {results.length > 0 && (
         <section className="mt-4 space-y-4">
-          <div className="border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="border border-gray-200 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up">
             <OverviewMap results={results} onMarkerClick={scrollToCard} />
           </div>
-          <StatsPanel results={results} onRowClick={scrollToCard} />
+          <div
+            className="animate-fade-in-up"
+            style={{ animationDelay: "100ms", animationFillMode: "backwards" }}
+          >
+            <StatsPanel results={results} onRowClick={scrollToCard} />
+          </div>
           <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider pt-2">
             Results ({results.length})
           </h2>
-          {results.map((r) => (
+          {results.map((r, i) => (
             <div
               key={r.id}
               ref={(el) => {
@@ -226,6 +231,10 @@ export default function TestingMode() {
                 else cardRefs.current.delete(r.id);
               }}
               className="animate-fade-in-up"
+              style={{
+                animationDelay: `${i * 80}ms`,
+                animationFillMode: "backwards",
+              }}
             >
               <ResultCard result={r} />
             </div>

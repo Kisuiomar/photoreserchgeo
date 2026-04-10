@@ -12,7 +12,7 @@ export default function SettingsPanel({ topK, onTopKChange }: Props) {
     <div className="mt-4">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 transition-colors duration-200"
       >
         <svg
           className="w-4 h-4"
@@ -35,7 +35,7 @@ export default function SettingsPanel({ topK, onTopKChange }: Props) {
         </svg>
         Settings
         <svg
-          className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`w-3 h-3 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -49,26 +49,34 @@ export default function SettingsPanel({ topK, onTopKChange }: Props) {
         </svg>
       </button>
 
-      {open && (
-        <div className="mt-3 p-4 bg-white border border-gray-200 shadow-sm rounded-2xl">
-          <label className="block text-sm text-gray-700 mb-2">
-            Predictions per image
-            <span className="text-gray-400 ml-2">({topK})</span>
-          </label>
-          <input
-            type="range"
-            min={1}
-            max={100}
-            value={topK}
-            onChange={(e) => onTopKChange(Number(e.target.value))}
-            className="w-full accent-blue-500"
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>1</span>
-            <span>100</span>
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          open
+            ? "grid-rows-[1fr] opacity-100 mt-3"
+            : "grid-rows-[0fr] opacity-0 mt-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl">
+            <label className="block text-sm text-gray-700 mb-2">
+              Predictions per image
+              <span className="text-gray-400 ml-2">({topK})</span>
+            </label>
+            <input
+              type="range"
+              min={1}
+              max={100}
+              value={topK}
+              onChange={(e) => onTopKChange(Number(e.target.value))}
+              className="w-full accent-indigo-500"
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>1</span>
+              <span>100</span>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
