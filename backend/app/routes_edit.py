@@ -108,6 +108,37 @@ async def edit_status(session_id: str) -> dict:
     return status
 
 
+@router.get("/edit/{session_id}/info")
+async def edit_info(session_id: str) -> dict:
+    """Return full session metadata for restoring frontend state after reload."""
+    session = edit_manager.get_session(session_id)
+    if session is None:
+        raise StarletteHTTPException(404, "Session not found")
+    current_round = session.get("current_round", 0)
+    rnd = (
+        session.get("rounds", {}).get(str(current_round)) if current_round > 0 else None
+    )
+    return {
+        "session_id": session["session_id"],
+        "directory": session["directory"],
+        "threshold": session.get("threshold", 0),
+        "include_predicted": session.get("include_predicted", False),
+        "status": session.get("status", "ready"),
+        "current_round": current_round,
+        "total_images": session.get("total_images", 0),
+        "real_gps_count": session.get("real_gps_count", 0),
+        "predicted_gps_count": session.get("predicted_gps_count", 0),
+        "no_gps_count": session.get("no_gps_count", 0),
+        "round_status": rnd.get("status") if rnd else None,
+        "round_above_threshold": rnd.get("above_threshold", 0) if rnd else 0,
+        "round_pending_review": sum(
+            1 for q in rnd.get("queue", []) if q.get("status") == "pending_review"
+        )
+        if rnd
+        else 0,
+    }
+
+
 @router.get("/edit/{session_id}/round/{round_num}/summary")
 async def round_summary(session_id: str, round_num: int) -> dict:
     summary = edit_manager.get_round_summary(session_id, round_num)

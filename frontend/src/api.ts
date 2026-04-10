@@ -73,6 +73,26 @@ export async function getScanResults(scanId: string): Promise<ScanResults> {
 
 /* ---- Edit mode ---- */
 
+export async function editInfo(sessionId: string): Promise<{
+  session_id: string;
+  directory: string;
+  threshold: number;
+  include_predicted: boolean;
+  status: string;
+  current_round: number;
+  total_images: number;
+  real_gps_count: number;
+  predicted_gps_count: number;
+  no_gps_count: number;
+  round_status: string | null;
+  round_above_threshold: number;
+  round_pending_review: number;
+}> {
+  const res = await fetch(`/api/edit/${sessionId}/info`);
+  if (!res.ok) throw new Error("Session not found");
+  return res.json();
+}
+
 export async function editStart(
   directory: string,
   threshold: number,

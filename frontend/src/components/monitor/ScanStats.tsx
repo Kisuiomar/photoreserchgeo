@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { ScanResults } from "../../types";
+import HelpTip from "../HelpTip";
 
 function pct(n: number, total: number): string {
   return total > 0 ? `${((n / total) * 100).toFixed(1)}%` : "0%";
@@ -43,36 +44,45 @@ export default function ScanStats({ results, onExport }: Props) {
       <div className="p-5 space-y-5">
         {/* ---- summary cards ---- */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <StatBox label="Total" value={t} />
+          <StatBox
+            label="Total"
+            value={t}
+            help="Total images found in the scanned directory."
+          />
           <StatBox
             label="Real GPS"
             value={realGps}
             sub={pct(realGps, t)}
-            color="text-emerald-600"
+            color="text-emerald-600 dark:text-emerald-400"
+            help="Photos with authentic GPS coordinates from the camera or phone that took them. These are never touched by the editor."
           />
           <StatBox
             label="Estimated"
             value={results.with_estimated_gps}
             sub={pct(results.with_estimated_gps, t)}
-            color="text-blue-600"
+            color="text-blue-600 dark:text-blue-400"
+            help="Photos where GPS was written later (e.g. by this app) and marked as ESTIMATED in the EXIF metadata. Distinguishable from real GPS."
           />
           <StatBox
             label="No GPS"
             value={results.without_gps}
             sub={pct(results.without_gps, t)}
-            color="text-gray-500"
+            color="text-gray-500 dark:text-gray-400"
+            help="Photos with no GPS metadata at all. Candidates for AI-based location prediction in the Edit mode."
           />
           <StatBox
             label="Null Island"
             value={results.null_island}
             sub={pct(results.null_island, t)}
-            color="text-yellow-600"
+            color="text-yellow-600 dark:text-yellow-400"
+            help="Photos with GPS coordinates of exactly (0, 0) — a location in the Atlantic Ocean off the African coast. Almost always a bug or broken sensor, not a real location. Named after the fact that this point is in the ocean where no land exists."
           />
           <StatBox
             label="Errors"
             value={results.errors}
             sub={pct(results.errors, t)}
-            color="text-red-500"
+            color="text-red-500 dark:text-red-400"
+            help="Files that could not be read or parsed (corrupt, unsupported format, permission issues)."
           />
         </div>
 
@@ -225,19 +235,24 @@ function StatBox({
   value,
   sub,
   color,
+  help,
 }: {
   label: string;
   value: number;
   sub?: string;
   color?: string;
+  help?: string;
 }) {
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
-      <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">
-        {label}
-      </p>
+      <div className="flex items-center justify-center">
+        <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">
+          {label}
+        </p>
+        {help && <HelpTip text={help} />}
+      </div>
       <p
-        className={`text-lg font-bold tabular-nums ${color || "text-gray-900"}`}
+        className={`text-lg font-bold tabular-nums ${color || "text-gray-900 dark:text-gray-100"}`}
       >
         {value.toLocaleString()}
       </p>

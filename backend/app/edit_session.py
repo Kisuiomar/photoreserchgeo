@@ -256,8 +256,14 @@ class EditSessionManager:
         4. Runs inference + scoring in a background thread
         """
         with self._lock:
+            # Clear any stale active session (e.g. from before a reload)
             if self._active_session and self._active_session != session_id:
-                raise RuntimeError("Another session is already running")
+                logger.warning(
+                    "Clearing stale active session %s to start %s",
+                    self._active_session,
+                    session_id,
+                )
+                self._active_session = None
             self._active_session = session_id
             self._continue.set()
 
@@ -391,7 +397,7 @@ class EditSessionManager:
 
         with self._lock:
             if self._active_session and self._active_session != session_id:
-                raise RuntimeError("Another session is already running")
+                self._active_session = None
 
             rnd = session["rounds"].get(str(session["current_round"]))
             if rnd and rnd["status"] == "paused":

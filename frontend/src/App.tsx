@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { AppMode } from "./types";
+import AboutModal from "./components/AboutModal";
 import EditMode from "./components/EditMode";
 import HelpTip from "./components/HelpTip";
 import MonitorMode from "./components/MonitorMode";
@@ -45,8 +46,9 @@ export default function App() {
   );
   const [sysStatus, setSysStatus] = useState<SystemStatus | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(
-    () => !localStorage.getItem("onboarding_done"),
+    () => !localStorage.getItem("onboarding_done_v2"),
   );
+  const [showAbout, setShowAbout] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Dark mode class on <html>
@@ -56,31 +58,33 @@ export default function App() {
   }, [dark]);
 
   // Poll system status
+  const pollSystemStatus = useCallback(() => {
+    fetch("/api/system-status")
+      .then((r) => r.json())
+      .then(setSysStatus)
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
-    const poll = () => {
-      fetch("/api/system-status")
-        .then((r) => r.json())
-        .then(setSysStatus)
-        .catch(() => {});
-    };
-    poll();
-    pollRef.current = setInterval(poll, 5000);
+    pollSystemStatus();
+    pollRef.current = setInterval(pollSystemStatus, 2000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, []);
+  }, [pollSystemStatus]);
 
   const handleUnload = useCallback(async () => {
     setUnloading(true);
     try {
       await fetch("/api/unload-models", { method: "POST" });
+      pollSystemStatus();
     } finally {
       setUnloading(false);
     }
-  }, []);
+  }, [pollSystemStatus]);
 
   const dismissOnboarding = useCallback(() => {
-    localStorage.setItem("onboarding_done", "true");
+    localStorage.setItem("onboarding_done_v2", "true");
     setShowOnboarding(false);
   }, []);
 
@@ -91,29 +95,30 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       {/* Onboarding wizard overlay */}
-      {showOnboarding && (
-        <OnboardingWizard onDismiss={dismissOnboarding} onSelectTab={setMode} />
-      )}
+      {showOnboarding && <OnboardingWizard onDismiss={dismissOnboarding} />}
+
+      {/* About modal */}
+      <AboutModal open={showAbout} onClose={() => setShowAbout(false)} />
 
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30 transition-colors duration-300">
-        <div className="flex items-center justify-between px-6 py-2.5 max-w-6xl mx-auto">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-2.5 max-w-6xl mx-auto gap-4">
           {/* Logo */}
-          <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent select-none">
+          <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent select-none justify-self-start">
             WhereWasThisTaken?
           </span>
 
-          {/* Tab navigation */}
-          <nav className="relative flex gap-0.5 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+          {/* Tab navigation — centered */}
+          <nav className="relative flex gap-0.5 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl justify-self-center">
             {TABS.map((t) => {
               const active = mode === t.key;
               return (
                 <button
                   key={t.key}
                   onClick={() => setMode(t.key)}
-                  className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-250 ${
+                  className={`relative flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     active
                       ? "text-indigo-700 dark:text-indigo-300"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   }`}
                 >
                   {active && (
@@ -147,7 +152,7 @@ export default function App() {
           </nav>
 
           {/* Right side: status + controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 justify-self-end">
             {/* Model status indicator */}
             <div className="flex items-center gap-2">
               <div className="relative flex items-center gap-1.5">
@@ -157,13 +162,19 @@ export default function App() {
                 <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
                   {sysStatus?.model_loaded ? "Model ready" : "Model idle"}
                 </span>
-                <HelpTip text="Green pulsing = model is loaded in RAM and ready for predictions. Gray = model is downloaded but not loaded (saves memory). It loads automatically on first use." />
+                <HelpTip
+                  width={320}
+                  text="Model states: ⚪ Gray = not downloaded yet (first use will download). ⚪ Gray = downloaded but not loaded in RAM (saves memory). 🟢 Green solid = loaded in RAM, ready. 🟢 Green pulsing = loaded and actively running inference. The model loads automatically on the first prediction and unloads after 10 minutes of idle time."
+                />
               </div>
 
               {sysStatus && (
-                <span className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500 hidden sm:inline">
-                  {sysStatus.memory_used_gb}/{sysStatus.memory_total_gb} GB
-                </span>
+                <div className="flex items-center">
+                  <span className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500 hidden sm:inline">
+                    {sysStatus.memory_used_gb}/{sysStatus.memory_total_gb} GB
+                  </span>
+                  <HelpTip text="System RAM: used / total. High usage is normal when the model is loaded. Click Free RAM to unload the model and recover memory." />
+                </div>
               )}
             </div>
 
@@ -175,6 +186,27 @@ export default function App() {
               title="Unload model to free RAM"
             >
               {unloading ? "Freeing…" : "Free RAM"}
+            </button>
+
+            {/* About button */}
+            <button
+              onClick={() => setShowAbout(true)}
+              className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              title="About"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                />
+              </svg>
             </button>
 
             {/* Dark mode toggle */}

@@ -90,6 +90,19 @@ export default function MonitorMode() {
         </div>
       )}
 
+      {!results && !scanning && (
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+            Library Overview
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+            Scan your photo library to see GPS coverage, format breakdown, and
+            where your photos were taken on a world map. Read-only — nothing is
+            modified.
+          </p>
+        </div>
+      )}
+
       <ScanControls
         directory={directory}
         onDirectoryChange={setDirectory}
@@ -103,15 +116,6 @@ export default function MonitorMode() {
           <ScanStats results={results} onExport={handleExport} />
           <ScanMap gpsImages={results.gps_images} />
         </>
-      )}
-
-      {!results && !scanning && (
-        <div className="text-center py-16">
-          <p className="text-gray-400 text-sm">
-            Scan your photo library to see GPS coverage, format breakdown, and
-            photo locations on a map.
-          </p>
-        </div>
       )}
     </div>
   );

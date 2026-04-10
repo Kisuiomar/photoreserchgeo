@@ -149,6 +149,11 @@ export default function PredictionMap({
   const bestPred = bestRank !== 1 ? predictions[bestRank - 1] : null;
   const showBestLine = realLocation && bestPred;
 
+  // Thin context lines from every other prediction to actual
+  const otherPreds = realLocation
+    ? predictions.filter((p) => p.rank !== 1 && p.rank !== bestRank)
+    : [];
+
   return (
     <MapContainer
       center={[20, 0]}
@@ -243,6 +248,23 @@ export default function PredictionMap({
           }}
         />
       )}
+      {/* Thin context lines from all remaining predictions to actual */}
+      {realLocation &&
+        otherPreds.map((p) => (
+          <Polyline
+            key={`line-${p.rank}`}
+            positions={[
+              [realLocation.lat, realLocation.lon],
+              [p.lat, p.lon],
+            ]}
+            pathOptions={{
+              color: "#94a3b8",
+              weight: 1,
+              dashArray: "2 4",
+              opacity: 0.35,
+            }}
+          />
+        ))}
     </MapContainer>
   );
 }
