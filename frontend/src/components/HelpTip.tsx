@@ -28,7 +28,6 @@ export default function HelpTip({ text, content, width = 260 }: Props) {
     if (!btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
     const btnCenterX = r.left + r.width / 2;
-    const btnCenterY = r.top + r.height / 2;
 
     // Decide whether to go above or below based on available space
     const spaceAbove = r.top;

@@ -49,12 +49,18 @@ app = FastAPI(title="WhereWasThisTaken?", lifespan=lifespan)
 app.include_router(scan_router)
 app.include_router(edit_router)
 
+# The API is meant to be reached only from the frontend running on the same
+# machine.  CORS is pinned to the single expected origin (127.0.0.1 + localhost
+# on the configured port) and limited to the verbs the frontend actually uses.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"http://localhost:{settings.port}"],
+    allow_origins=[
+        f"http://localhost:{settings.port}",
+        f"http://127.0.0.1:{settings.port}",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
@@ -79,9 +85,17 @@ async def validation_exception_handler(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Unhandled exception")
+    # Log with stacktrace for the operator, but never return the raw
+    # exception message to the client: it can leak filesystem paths,
+    # library internals and other noise that has no business in an
+    # HTTP response body.
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(
-        status_code=500, content={"error": "internal_server_error", "message": str(exc)}
+        status_code=500,
+        content={
+            "error": "internal_server_error",
+            "message": "An unexpected error occurred. Check the server logs for details.",
+        },
     )
 
 

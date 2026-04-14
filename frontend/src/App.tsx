@@ -179,7 +179,7 @@ export default function App() {
               {/* Model state pill */}
               <div className="flex items-center gap-1.5">
                 <span
-                  className={`w-2 h-2 rounded-full ${modelMeta.dot} shadow-sm ${modelMeta.pulse ? "animate-pulse" : ""}`}
+                  className={`w-2 h-2 rounded-full ${modelMeta.dot} shadow-sm`}
                 />
                 <span className="text-[11px] font-medium text-gray-700 dark:text-gray-200">
                   {modelMeta.label}

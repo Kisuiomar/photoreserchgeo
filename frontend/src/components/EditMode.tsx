@@ -4,14 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   editAccept,
   editApply,
-  editCleanupBackups,
   editInfo,
   editManual,
   editPause,
   editQueueNext,
   editReject,
   editResume,
-  editRollbackAll,
   editRoundSummary,
   editStart,
   editStartRound,
@@ -459,33 +457,14 @@ export default function EditMode() {
     }
   }, [sessionId]);
 
-  /* ---- Session-level actions ---- */
-  const handleRollbackAll = useCallback(async () => {
-    if (!sessionId || !confirm("Undo ALL GPS writes from this session?"))
-      return;
-    try {
-      const result = await editRollbackAll(sessionId);
-      alert(`Rolled back ${result.rolled_back} images.`);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Rollback failed");
-    }
-  }, [sessionId]);
-
-  const handleCleanup = useCallback(async () => {
-    if (
-      !sessionId ||
-      !confirm(
-        "This permanently removes backup files. You will NOT be able to undo GPS changes. Continue?",
-      )
-    )
-      return;
-    try {
-      const result = await editCleanupBackups(sessionId);
-      alert(`Cleaned up ${result.cleaned} backup files.`);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Cleanup failed");
-    }
-  }, [sessionId]);
+  /*
+   * FUTURE FEATURE: rollback + cleanup-backups UI. The backend endpoints
+   * and the `editRollbackAll` / `editCleanupBackups` API client functions
+   * are still wired (see `api.ts` and `routes_edit.py`). When the
+   * backup-file generation flag is re-enabled in `gps_writer.py`, add
+   * the corresponding handlers back in here and render two buttons in
+   * the session-complete step.
+   */
 
   const resetSession = useCallback(() => {
     clearPersisted();

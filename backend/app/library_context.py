@@ -347,7 +347,6 @@ def _sequence_hints(
     for img in gps_images:
         by_dir[str(Path(img["path"]).parent)].append(img)
 
-    target_set = {img["path"] for img in targets}
     result: dict[str, LocationHint] = {}
 
     for target in targets:
