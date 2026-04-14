@@ -172,13 +172,13 @@ docker compose down -v    # wipes the model cache too
 
 ### Pointing it at your own library
 
-By default the app serves the small sample folder bundled with the project. To use your real library, set the path in `.env`:
+The repo ships with **no photos**. On first `docker compose up` an empty `./photos/` folder is created next to the project and mounted into the backend as `/photos`. Drop photos into that folder, or point the app at an existing library by setting the path in `.env`:
 
 ```ini
 PHOTO_LIBRARY_PATH=/absolute/path/to/your/photos
 ```
 
-The backend mounts this at `/photos` internally. Only Edit mode ever writes, and only under the safety guarantees described below.
+Nothing leaves your machine. Only Edit mode ever writes to the files in this folder, and only under the safety guarantees described below.
 
 ---
 
