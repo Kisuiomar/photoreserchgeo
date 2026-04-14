@@ -2,7 +2,7 @@
 
 # WhereWasThisTaken?
 
-### Hi! This is a little tool that figures out where any photo was taken, running entirely on your own computer.
+### A self-hosted tool that predicts where any photo was taken, running entirely on the user's own machine.
 
 <p>
   <img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6366f1">
@@ -12,7 +12,7 @@
   <img alt="Frontend" src="https://img.shields.io/badge/frontend-React%20%2B%20Vite-61dafb">
 </p>
 
-No uploads, no accounts, no telemetry. Just you, your photos, and a neural network that is surprisingly good at guessing where they were taken.
+No uploads, no accounts, no telemetry. A local-first photo geolocation workstation backed by a neural network that is surprisingly good at guessing where images were taken.
 
 </div>
 
@@ -33,122 +33,122 @@ No uploads, no accounts, no telemetry. Just you, your photos, and a neural netwo
 
 ## What this is
 
-Almost everyone has a folder somewhere full of photos without location data. Scanned film. Screenshots. WhatsApp downloads. Phones with location turned off. They all land in your library and look a bit sad on any map view.
+Most photo libraries contain a significant share of images without location data: scanned film, screenshots, messenger downloads, photos taken with location services disabled. These images are missing a useful dimension and appear blank on any map view.
 
-This tool gives them their place back. You drop a photo in and a deep learning model called GeoCLIP guesses where it was taken, usually accurately enough to recognize the exact neighborhood. You can run it on one photo, on a small batch, or on your entire library. It runs locally on your own machine. The model downloads once on first launch, after that you can unplug the internet and it still works.
+This tool predicts a plausible location for each of them. The underlying model is GeoCLIP, a deep learning network trained on millions of geotagged images, and it is typically accurate enough to identify the neighbourhood rather than just the country. It can be run on a single image, on a small batch, or across an entire library. Everything runs on the host machine. The model weights are downloaded once on first launch; after that the application works offline.
 
 ---
 
 ## The three modes
 
-| Mode                  | What you do                                                        | When to use it                                                               |
-| --------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [Explore](#explore)   | Drop in photos, read the predictions.                              | You are curious about a photo or a small batch.                              |
-| [Overview](#overview) | Point at a folder, see what has GPS and what does not.             | You want to understand your library before editing anything.                 |
-| [Edit](#edit)         | Let the AI fill in missing coordinates. You just accept or reject. | You want to enrich a pile of photos so they show up on your photo app's map. |
+| Mode                  | Purpose                                                                 | Typical use case                                                            |
+| --------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [Explore](#explore)   | Upload photos, inspect the predictions.                                 | Investigating a single image or a small batch.                              |
+| [Overview](#overview) | Scan a folder, see which photos have GPS and which do not.              | Understanding the state of a library before running the editor.             |
+| [Edit](#edit)         | Let the model fill in missing coordinates. The user accepts or rejects. | Enriching a large set of photos so they appear on map views in other tools. |
 
 ---
 
 ## Explore
 
-Drop any photo into the upload zone and you get a world map with the AI's top five guesses, the top pick's address, and a distance-to-truth benchmark if the photo already had GPS.
+Any image uploaded to the drop zone is plotted on a world map together with the top five predictions, the address of the top candidate, and, when the file already contained GPS metadata, a distance-to-truth benchmark.
 
 <p align="center">
   <img src="docs/screenshots/explore_melbourne.png" alt="An apartment interior in Melbourne, predicted as Southbank, off by 800 m" width="880">
 </p>
 
-> Floor-to-ceiling windows, a dining table, no obvious landmark. The AI predicted **Southbank, Victoria**. The truth was **Docklands, Victoria**, about 800 metres away.
+> Floor-to-ceiling windows, a dining table, no obvious landmark. The model predicted **Southbank, Victoria**. The ground truth was **Docklands, Victoria**, about 800 metres away.
 
 <p align="center">
   <img src="docs/screenshots/explore_un_hall.png" alt="The UN General Assembly Hall, predicted as Long Island City, off by 79 m" width="880">
 </p>
 
-> All five top predictions landed on **Long Island City, New York**. Off by **79 metres**. Essentially perfect.
+> All five top predictions landed on **Long Island City, New York**. Deviation from the ground truth: **79 metres**.
 
 <p align="center">
   <img src="docs/screenshots/explore_sydney.png" alt="A street in Sydney, predicted correctly, off by 340 m" width="880">
 </p>
 
-> Predicted **Sydney, NSW**. Off by **340 metres**.
+> Predicted **Sydney, NSW**. Deviation **340 metres**.
 
 <p align="center">
   <img src="docs/screenshots/explore_fiji.png" alt="An infinity pool in Fiji, predicted as Nadi, off by 6 km" width="880">
 </p>
 
-> Palms, turquoise water, no street signs. Predicted **Nadi, Western, Fiji**. Off by about **6 kilometres**, still in the right area.
+> Palms, turquoise water, no street signs. Predicted **Nadi, Western, Fiji**. Deviation approximately **6 kilometres**, still within the correct region.
 
 <p align="center">
   <img src="docs/screenshots/explore_gold_coast.png" alt="Gold Coast at night, predicted as Surfers Paradise, off by 410 m" width="880">
 </p>
 
-> Predicted **Surfers Paradise, Queensland**. Truth **Gold Coast, Queensland**. Off by **410 metres**. Night shots work too.
+> Predicted **Surfers Paradise, Queensland**. Ground truth **Gold Coast, Queensland**. Deviation **410 metres**. Low-light images are handled equally well.
 
-Up to 50 photos at once. The map populates live as each one finishes.
+Up to 50 images can be processed per batch. Results appear on the map as each prediction completes.
 
 <p align="center">
   <img src="docs/screenshots/explore_batch_processing.png" alt="Batch processing in Explore mode with a world map filling up live" width="880">
 </p>
 
-> A batch of 38 photos being processed. 23 done, about 4 minutes remaining, and the results drop onto the world map as they arrive.
+> A batch of 38 photos in progress. 23 completed, roughly 4 minutes remaining, results streaming onto the world map as they arrive.
 
 ---
 
 ## Overview
 
-Point it at a folder. Every image is sorted into `Real GPS`, `Estimated GPS` (coordinates written by this tool earlier), `No GPS`, `Null Island` (the classic (0, 0) bug), or `Errors`. Coordinates appear on a world map so the gaps are easy to spot.
+Given a directory, every image in it is classified into one of five categories: `Real GPS`, `Estimated GPS` (coordinates previously written by this application), `No GPS`, `Null Island` (the classic (0, 0) sensor bug), and `Errors`. Coordinates are plotted on a world map so that gaps in coverage become visible at a glance.
 
 <p align="center">
   <img src="docs/screenshots/overview_library_stats.png" alt="Overview mode library statistics with a map" width="880">
 </p>
 
-> A tiny example library with one photo. At the scale of a real camera roll this becomes a dense heat map of where you have been and where the GPS holes are.
+> A minimal example with a single image. For a real camera roll this view becomes a dense heat map that highlights both coverage and the gaps in the library.
 
-Read-only. Nothing is modified. A natural first step before running the Edit mode.
+Strictly read-only. Nothing on disk is modified. Running this mode first is the recommended way to understand a library before deciding whether to invoke the editor.
 
 ---
 
 ## Edit
 
-The main feature. A guided flow for filling in missing GPS coordinates. The AI does the heavy lifting, you click accept or reject on its suggestions. You never have to type an address unless you want to override a prediction.
+The primary feature. A guided flow for filling in missing GPS coordinates. The model produces the predictions; the user confirms or rejects them one by one. Typing an address is only necessary when overriding the model's suggestion.
 
-**Step 1.** Pick a directory, tweak a couple of optional toggles, press Scan.
+**Step 1.** Select a directory, set the optional toggles, start the scan.
 
 <p align="center">
   <img src="docs/screenshots/edit_config.png" alt="Edit mode configuration screen" width="880">
 </p>
 
-> Configuration screen. Directory path, optional confidence filter, optional re-processing of previously predicted photos. The safety guarantee at the bottom is not decoration: real camera GPS is actually never touched.
+> Configuration screen: directory path, optional confidence threshold, optional re-processing of previously predicted photos. The safety notice at the bottom is enforced in code: real camera GPS is never modified.
 
-**Step 2.** The model runs through every candidate photo. Photos taken close in time to GPS-tagged photos get a confidence bonus, because people cannot teleport.
+**Step 2.** The model is applied to every candidate image. Photos captured close in time to GPS-tagged photos receive a confidence bonus, since physical proximity in time implies physical proximity in space.
 
-**Step 3.** Review each suggestion, one photo at a time. `A` or `Enter` to accept, `R` or `Esc` to reject, `M` for a manual address.
+**Step 3.** Each suggestion is reviewed individually. Keyboard shortcuts: `A` or `Enter` to accept, `R` or `Esc` to reject, `M` to supply a manual address.
 
 <p align="center">
   <img src="docs/screenshots/edit_review.png" alt="Edit mode review screen with accept, reject, manual buttons" width="880">
 </p>
 
-> One photo at a time. The AI shows its top pick plus four alternatives, three big buttons drive the decision, and the privacy reminder at the bottom makes the guarantee explicit.
+> Single-image review. The top prediction is shown alongside four alternatives; three buttons drive the decision; the privacy reminder at the bottom restates the guarantee.
 
-Accepted coordinates go straight into the photo's EXIF, tagged `ESTIMATED` so you can always tell real GPS from predicted GPS later. A hundred photos take about ten minutes.
+Accepted coordinates are written directly into the image's EXIF metadata and tagged `ESTIMATED` so that predicted locations remain distinguishable from camera-recorded ones in the future. Reviewing one hundred images typically takes around ten minutes.
 
-Real GPS from your camera is never touched.
+Images that already contain real GPS are never touched.
 
 ---
 
 ## Privacy
 
-Everything happens on your machine.
+All processing takes place on the host machine.
 
-- Photos are read from your disk, processed in your RAM, written back to your disk. Nothing else.
-- No telemetry, no analytics, no accounts.
-- One network call on first launch to download the model weights from HuggingFace. After that, works offline. Reverse geocoding (coordinates to place names) and forward geocoding (address lookup) use external services when available but are optional.
-- Every coordinate written by this tool is tagged `ESTIMATED:GEOCLIP:<version>:<timestamp>` in the photo's EXIF so real GPS and predicted GPS are always distinguishable.
+- Images are read from local disk, processed in local memory, and written back to local disk. No other transfer occurs.
+- No telemetry, no analytics, no user accounts.
+- A single outbound network call is made on first launch to download the model weights from HuggingFace. Subsequent runs work offline. Reverse geocoding (coordinates to place names) and forward geocoding (address lookup) use external services when available but are not required for core functionality.
+- Every coordinate written by the application is tagged `ESTIMATED:GEOCLIP:<version>:<timestamp>` in the image's EXIF metadata so that real GPS and predicted GPS can always be distinguished.
 
 ---
 
 ## Quick start
 
-You need Docker Engine 24+ and Docker Compose v2. Works on Linux, macOS, and Windows via WSL2. Roughly 4 GB of free disk for the model and 4 GB of free RAM while it is loaded.
+Requirements: Docker Engine 24+ and Docker Compose v2. Supported on Linux, macOS, and Windows via WSL2. Approximately 4 GB of free disk is needed for the model cache and 4 GB of free RAM while the model is loaded.
 
 ```bash
 git clone https://github.com/M-Enzinger/where-was-this-taken.git
@@ -157,28 +157,28 @@ cp .env.example .env
 docker compose up
 ```
 
-Then open [http://localhost:8085](http://localhost:8085) in your browser.
+Then open [http://localhost:8085](http://localhost:8085) in a browser.
 
-On the very first launch the backend downloads the model weights (around 3.5 GB). You see it happen in the terminal. The frontend is held back until the backend reports ready, so `localhost:8085` does not respond until everything is in place. That is deliberate and avoids a half-loaded UI racing the download.
+On the first launch the backend downloads the model weights (approximately 3.5 GB). Progress is visible in the terminal. The frontend container is intentionally held back until the backend reports healthy, so `localhost:8085` remains unreachable until the application is fully ready. This avoids a partially loaded UI racing the download.
 
-Subsequent starts are instant, the weights live in a named Docker volume.
+Subsequent starts are immediate, as the weights are persisted in a named Docker volume.
 
 To stop:
 
 ```bash
-docker compose down       # keeps the model cache
-docker compose down -v    # wipes the model cache too
+docker compose down       # stop containers, preserve the model cache
+docker compose down -v    # stop containers and wipe the model cache
 ```
 
-### Pointing it at your own library
+### Using a custom photo library
 
-The repo ships with **no photos**. On first `docker compose up` an empty `./photos/` folder is created next to the project and mounted into the backend as `/photos`. Drop photos into that folder, or point the app at an existing library by setting the path in `.env`:
+The repository ships with **no photos**. On the first `docker compose up` an empty `./photos/` directory is created alongside the project and mounted into the backend as `/photos`. Images placed in this directory, or an existing library configured via `.env`, are the only files the application ever reads:
 
 ```ini
-PHOTO_LIBRARY_PATH=/absolute/path/to/your/photos
+PHOTO_LIBRARY_PATH=/absolute/path/to/the/library
 ```
 
-Nothing leaves your machine. Only Edit mode ever writes to the files in this folder, and only under the safety guarantees described below.
+Files in this folder never leave the machine. Only the Edit mode writes to them, and only under the safety guarantees described in the technical section.
 
 ---
 
@@ -292,9 +292,9 @@ Everything is under `/api`.
 
 ## Contributing
 
-I wrote this for myself and put it online because other people probably have the same pile of GPS-less photos as me. If you find a bug, open an issue. If you have an idea for a feature, open an issue. If you ship a fix, open a pull request. All of those are welcome and I will try to respond quickly.
+Bug reports, feature suggestions, and pull requests are welcome. Issues are the preferred entry point for any of the three. Responses are typically prompt.
 
-If you just want to say thanks, a GitHub star genuinely means a lot to a solo project.
+A sincere thank you to everyone who takes the time to contribute. Every report, fix, review, translation, and documentation improvement makes the project better for the next person who finds it. A GitHub star is also a meaningful signal for a solo-maintained project.
 
 ## License
 
@@ -332,6 +332,6 @@ Thanks to every maintainer and contributor of those projects.
 
 <div align="center">
 
-Built with care by **Maximilian Enzinger**.
+Maintained by **Maximilian Enzinger**.
 
 </div>
