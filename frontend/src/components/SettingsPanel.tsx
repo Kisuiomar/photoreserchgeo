@@ -12,7 +12,7 @@ export default function SettingsPanel({ topK, onTopKChange }: Props) {
     <div className="mt-4">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+        className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
       >
         <svg
           className="w-4 h-4"
@@ -60,7 +60,7 @@ export default function SettingsPanel({ topK, onTopKChange }: Props) {
           <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl">
             <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
               Predictions per image
-              <span className="text-gray-400 dark:text-gray-500 ml-2">
+              <span className="text-gray-500 dark:text-gray-400 ml-2">
                 ({topK})
               </span>
             </label>

@@ -50,7 +50,7 @@ export default function Switch({
             </div>
           )}
           {description && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 leading-relaxed">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
               {description}
             </p>
           )}

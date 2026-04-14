@@ -97,7 +97,7 @@ export default function MonitorMode() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
             Scan your photo library to see GPS coverage, format breakdown, and
-            where your photos were taken on a world map. Read-only — nothing is
+            where your photos were taken on a world map. Read-only, nothing is
             modified.
           </p>
         </div>

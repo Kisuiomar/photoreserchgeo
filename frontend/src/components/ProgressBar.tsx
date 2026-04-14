@@ -101,7 +101,7 @@ export default function ProgressBar({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
         <span>{eta || "\u00A0"}</span>
         <span>{pct}%</span>
       </div>

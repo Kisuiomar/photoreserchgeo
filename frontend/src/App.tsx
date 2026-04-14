@@ -34,9 +34,37 @@ interface SystemStatus {
   memory_used_gb: number;
   memory_total_gb: number;
   memory_percent: number;
-  model_state: string;
+  model_state: "not_downloaded" | "downloaded" | "loaded" | "in_use";
   model_loaded: boolean;
+  model_in_use: boolean;
+  model_downloaded: boolean;
 }
+
+const MODEL_STATE_META: Record<
+  SystemStatus["model_state"],
+  { label: string; dot: string; pulse: boolean }
+> = {
+  not_downloaded: {
+    label: "Not downloaded",
+    dot: "bg-slate-400 dark:bg-slate-500",
+    pulse: false,
+  },
+  downloaded: {
+    label: "Downloaded",
+    dot: "bg-blue-400 dark:bg-blue-400 shadow-blue-400/50",
+    pulse: false,
+  },
+  loaded: {
+    label: "Loaded, idle",
+    dot: "bg-emerald-400 dark:bg-emerald-400 shadow-emerald-400/50",
+    pulse: false,
+  },
+  in_use: {
+    label: "In use",
+    dot: "bg-amber-400 dark:bg-amber-400 shadow-amber-400/70",
+    pulse: true,
+  },
+};
 
 export default function App() {
   const [mode, setMode] = useState<AppMode>("testing");
@@ -57,7 +85,7 @@ export default function App() {
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
 
-  // Poll system status
+  // Poll system status. Faster cadence while model is actively in use.
   const pollSystemStatus = useCallback(() => {
     fetch("/api/system-status")
       .then((r) => r.json())
@@ -65,13 +93,16 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  const inUse = sysStatus?.model_state === "in_use";
+
   useEffect(() => {
     pollSystemStatus();
-    pollRef.current = setInterval(pollSystemStatus, 2000);
+    const interval = inUse ? 500 : 2000;
+    pollRef.current = setInterval(pollSystemStatus, interval);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [pollSystemStatus]);
+  }, [pollSystemStatus, inUse]);
 
   const handleUnload = useCallback(async () => {
     setUnloading(true);
@@ -88,9 +119,9 @@ export default function App() {
     setShowOnboarding(false);
   }, []);
 
-  const modelDot = sysStatus?.model_loaded
-    ? "bg-emerald-400 shadow-emerald-400/50"
-    : "bg-gray-400 dark:bg-gray-600";
+  const modelState: SystemStatus["model_state"] =
+    sysStatus?.model_state ?? "not_downloaded";
+  const modelMeta = MODEL_STATE_META[modelState];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -107,7 +138,7 @@ export default function App() {
             WhereWasThisTaken?
           </span>
 
-          {/* Tab navigation — centered */}
+          {/* Tab navigation, centered */}
           <nav className="relative flex gap-0.5 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl justify-self-center">
             {TABS.map((t) => {
               const active = mode === t.key;
@@ -152,29 +183,102 @@ export default function App() {
           </nav>
 
           {/* Right side: status + controls */}
-          <div className="flex items-center gap-3 justify-self-end">
-            {/* Model status indicator */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex items-center gap-1.5">
+          <div className="flex items-center gap-2 justify-self-end">
+            {/* System status group (model + RAM) */}
+            <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+              {/* Model state pill */}
+              <div className="flex items-center gap-1.5">
                 <span
-                  className={`w-2 h-2 rounded-full ${modelDot} ${sysStatus?.model_loaded ? "animate-pulse" : ""} shadow-sm`}
+                  className={`w-2 h-2 rounded-full ${modelMeta.dot} shadow-sm ${modelMeta.pulse ? "animate-pulse" : ""}`}
                 />
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
-                  {sysStatus?.model_loaded ? "Model ready" : "Model idle"}
+                <span className="text-[11px] font-medium text-gray-700 dark:text-gray-200">
+                  {modelMeta.label}
                 </span>
                 <HelpTip
-                  width={320}
-                  text="Model states: ⚪ Gray = not downloaded yet (first use will download). ⚪ Gray = downloaded but not loaded in RAM (saves memory). 🟢 Green solid = loaded in RAM, ready. 🟢 Green pulsing = loaded and actively running inference. The model loads automatically on the first prediction and unloads after 10 minutes of idle time."
+                  width={300}
+                  content={
+                    <div className="space-y-2">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 text-xs">
+                        Model states
+                      </p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-start gap-2">
+                          <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500 mt-1 flex-shrink-0" />
+                          <div>
+                            <span className="font-semibold text-slate-500 dark:text-slate-400">
+                              Not downloaded
+                            </span>
+                            <p className="text-[11px] text-gray-600 dark:text-gray-300">
+                              Weights not yet on disk. First prediction will
+                              fetch them.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-400 mt-1 flex-shrink-0" />
+                          <div>
+                            <span className="font-semibold text-blue-500 dark:text-blue-400">
+                              Downloaded
+                            </span>
+                            <p className="text-[11px] text-gray-600 dark:text-gray-300">
+                              On disk but not loaded in RAM to save memory.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
+                          <div>
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                              Loaded, idle
+                            </span>
+                            <p className="text-[11px] text-gray-600 dark:text-gray-300">
+                              In RAM, ready to respond instantly.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse mt-1 flex-shrink-0" />
+                          <div>
+                            <span className="font-semibold text-amber-600 dark:text-amber-400">
+                              In use
+                            </span>
+                            <p className="text-[11px] text-gray-600 dark:text-gray-300">
+                              Actively running inference right now.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200 dark:border-gray-700">
+                        Loads on first use, unloads after 10 minutes idle.
+                      </p>
+                    </div>
+                  }
                 />
               </div>
 
               {sysStatus && (
-                <div className="flex items-center">
-                  <span className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500 hidden sm:inline">
-                    {sysStatus.memory_used_gb}/{sysStatus.memory_total_gb} GB
-                  </span>
-                  <HelpTip text="System RAM: used / total. High usage is normal when the model is loaded. Click Free RAM to unload the model and recover memory." />
-                </div>
+                <>
+                  <span className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+                  <div className="flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3 text-gray-500 dark:text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.25 2.25 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875C3.839 7.5 3 8.34 3 9.375v10.5C3 20.91 3.84 21.75 4.875 21.75h9.75c1.036 0 1.875-.84 1.875-1.875V9.375c0-1.036-.84-1.875-1.875-1.875h-1.875"
+                      />
+                    </svg>
+                    <span className="text-[11px] font-medium tabular-nums text-gray-700 dark:text-gray-200">
+                      {sysStatus.memory_used_gb}/{sysStatus.memory_total_gb} GB
+                    </span>
+                    <HelpTip text="System RAM used vs. total. High usage is expected when the model is loaded. Use the Free RAM button to unload and recover memory." />
+                  </div>
+                </>
               )}
             </div>
 
@@ -182,7 +286,7 @@ export default function App() {
             <button
               onClick={handleUnload}
               disabled={unloading}
-              className="text-[11px] text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all disabled:opacity-50"
+              className="text-[11px] font-medium text-gray-700 dark:text-gray-200 hover:text-red-500 dark:hover:text-red-400 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               title="Unload model to free RAM"
             >
               {unloading ? "Freeing…" : "Free RAM"}
@@ -191,14 +295,14 @@ export default function App() {
             {/* About button */}
             <button
               onClick={() => setShowAbout(true)}
-              className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              className="text-[11px] font-medium text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-sm flex items-center gap-1"
               title="About"
             >
               <svg
-                className="w-4 h-4"
+                className="w-3.5 h-3.5"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={1.5}
+                strokeWidth={1.8}
                 viewBox="0 0 24 24"
               >
                 <path
@@ -207,12 +311,13 @@ export default function App() {
                   d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
                 />
               </svg>
+              About
             </button>
 
             {/* Dark mode toggle */}
             <button
               onClick={() => setDark((d) => !d)}
-              className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              className="p-1.5 rounded-lg text-gray-700 dark:text-gray-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-transform duration-300 hover:rotate-12 hover:scale-110"
               title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? (

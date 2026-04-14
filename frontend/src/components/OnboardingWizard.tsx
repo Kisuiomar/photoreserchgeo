@@ -8,9 +8,9 @@ interface Props {
 const STEPS = [
   {
     title: "Welcome to WhereWasThisTaken?",
-    body: "This app uses AI to predict where your photos were taken — and can even write GPS coordinates into photos that are missing them. Let's walk through how it works.",
+    body: "This app uses AI to predict where your photos were taken. It can also write GPS coordinates into photos that are missing them. Let's walk through how it works.",
     extra:
-      "Your photos never leave your computer. Everything — scanning, inference, writing — happens locally on this machine. No data is uploaded anywhere.",
+      "Your photos never leave your computer. Scanning, inference, and writing all happen locally on this machine. No data is uploaded anywhere.",
     icon: "welcome",
   },
   {
@@ -24,19 +24,19 @@ const STEPS = [
     title: "Overview Mode",
     body: "Scan your entire photo library to see how many photos have GPS, which are missing it, and where they're located on a map. Statistics break down by format, directory, and GPS quality.",
     extra:
-      "Use this first to understand your library before running the editor. It's a read-only scan — nothing is modified.",
+      "Use this first to understand your library before running the editor. It's a read-only scan, nothing is modified.",
     icon: "grid",
   },
   {
-    title: "Edit Mode — Round-based prediction",
+    title: "Edit Mode: Round-based Prediction",
     body: "This is the main feature. It works in rounds: each round predicts locations for photos without GPS, you review every prediction and decide whether to accept, reject, or enter a manual address.",
     extra:
-      "The clever part: once you accept a location, that photo becomes a new reference point. So in round 2, a photo taken 3 minutes after your newly-accepted photo gets a huge confidence boost from temporal proximity. You can keep iterating until no more photos can be located. Real GPS coordinates from your camera are never touched — only photos missing GPS are ever modified, and every write creates a backup you can roll back.",
+      "The clever part: once you accept a location, that photo becomes a new reference point. So in round 2, a photo taken 3 minutes after your newly-accepted photo gets a huge confidence boost from temporal proximity. You can keep iterating until no more photos can be located. Real GPS coordinates from your camera are never touched. Only photos missing GPS are ever modified, and every write creates a backup you can roll back.",
     icon: "edit",
   },
   {
     title: "You're all set!",
-    body: "Every button, term, and statistic has a ? icon next to it — hover or click for an in-depth explanation. Your privacy stays protected: no photo, no metadata, and no prediction ever leaves this machine.",
+    body: "Every button, term, and statistic has a ? icon next to it. Hover or click for an in-depth explanation. Your privacy stays protected: no photo, no metadata, and no prediction ever leaves this machine.",
     extra: null,
     icon: "done",
   },
@@ -259,7 +259,7 @@ export default function OnboardingWizard({ onDismiss }: Props) {
         <div className="px-6 pb-5 flex items-center justify-between">
           <button
             onClick={skip}
-            className="text-xs text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             Skip intro
           </button>

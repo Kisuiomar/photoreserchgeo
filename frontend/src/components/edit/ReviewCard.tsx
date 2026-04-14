@@ -135,7 +135,7 @@ export default function ReviewCard({
               {predictions.slice(1).map((p) => (
                 <div
                   key={p.rank}
-                  className="flex justify-between text-xs text-gray-400"
+                  className="flex justify-between text-xs text-gray-500 dark:text-gray-400"
                 >
                   <span>
                     #{p.rank} {fmtAddr(p.address)}
@@ -175,7 +175,7 @@ export default function ReviewCard({
                 >
                   <Tooltip direction="top">
                     <div style={{ fontSize: 11 }}>
-                      <strong>#{p.rank}</strong> — {fmtAddr(p.address)}
+                      <strong>#{p.rank}</strong> · {fmtAddr(p.address)}
                       <br />
                       {(p.probability * 100).toFixed(1)}%
                     </div>
@@ -243,7 +243,7 @@ export default function ReviewCard({
               </div>
             )}
 
-            <p className="text-[10px] text-gray-400">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400">
               Shortcuts: A/Enter = Accept, R/Esc = Reject, M = Manual input
             </p>
           </div>

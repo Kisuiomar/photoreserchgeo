@@ -5,7 +5,7 @@ interface Props {
 export default function PrivacyNote({ className = "" }: Props) {
   return (
     <p
-      className={`text-[10px] text-gray-400 dark:text-gray-600 text-center flex items-center justify-center gap-1.5 ${className}`}
+      className={`text-[10px] text-gray-500 dark:text-gray-400 text-center flex items-center justify-center gap-1.5 ${className}`}
     >
       <svg
         className="w-3 h-3 text-emerald-500 dark:text-emerald-400"

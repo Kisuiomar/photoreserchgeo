@@ -166,7 +166,7 @@ export default function TestingMode() {
       {collapsed && results.length > 0 ? (
         <button
           onClick={() => setCollapsed(false)}
-          className="w-full text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 transition-all duration-300"
+          className="w-full text-center py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 transition-all duration-300"
         >
           + Upload more images
         </button>
@@ -241,7 +241,7 @@ export default function TestingMode() {
         <div className="mt-6 flex justify-end">
           <button
             onClick={reset}
-            className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200"
           >
             Clear All
           </button>

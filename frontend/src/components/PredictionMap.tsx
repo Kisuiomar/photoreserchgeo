@@ -175,7 +175,7 @@ export default function PredictionMap({
         >
           <Tooltip direction="top" offset={[0, -14]}>
             <div style={{ fontSize: 11, lineHeight: 1.5 }}>
-              <strong>#{p.rank}</strong> — {(p.probability * 100).toFixed(1)}%
+              <strong>#{p.rank}</strong> · {(p.probability * 100).toFixed(1)}%
               <br />
               {p.lat.toFixed(6)}, {p.lon.toFixed(6)}
               <br />

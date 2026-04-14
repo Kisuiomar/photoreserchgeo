@@ -194,7 +194,7 @@ export default function AboutModal({ open, onClose }: Props) {
                     <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
                       WhereWasThisTaken?
                     </h2>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       AI-powered photo geolocation
                     </p>
                   </div>
@@ -232,7 +232,7 @@ export default function AboutModal({ open, onClose }: Props) {
                         Maximilian Enzinger
                       </strong>
                     </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       Licensed under the GNU Affero General Public License v3.0
                     </p>
                   </div>
@@ -240,7 +240,7 @@ export default function AboutModal({ open, onClose }: Props) {
                     AGPL-3.0
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2 leading-relaxed">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
                   This program is free software: you can redistribute it and/or
                   modify it under the terms of the GNU Affero General Public
                   License as published by the Free Software Foundation, either
@@ -257,12 +257,12 @@ export default function AboutModal({ open, onClose }: Props) {
                 <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Open Source Acknowledgements
                 </h3>
-                <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-3">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
                   This project is built upon the following open source software.
                   We are grateful to all contributors.
                 </p>
 
-                <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">
+                <h4 className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                   Python / Backend
                 </h4>
                 <div className="space-y-1 mb-3">
@@ -280,7 +280,7 @@ export default function AboutModal({ open, onClose }: Props) {
                         >
                           {d.name}
                         </a>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 hidden sm:inline">
                           {d.desc}
                         </span>
                       </div>
@@ -289,7 +289,7 @@ export default function AboutModal({ open, onClose }: Props) {
                   ))}
                 </div>
 
-                <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">
+                <h4 className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                   JavaScript / Frontend
                 </h4>
                 <div className="space-y-1 mb-3">
@@ -307,7 +307,7 @@ export default function AboutModal({ open, onClose }: Props) {
                         >
                           {d.name}
                         </a>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 hidden sm:inline">
                           {d.desc}
                         </span>
                       </div>
@@ -316,7 +316,7 @@ export default function AboutModal({ open, onClose }: Props) {
                   ))}
                 </div>
 
-                <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">
+                <h4 className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                   Data Sources
                 </h4>
                 <div className="space-y-1">
@@ -334,7 +334,7 @@ export default function AboutModal({ open, onClose }: Props) {
                         >
                           {d.name}
                         </a>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:inline">
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 hidden sm:inline">
                           {d.desc}
                         </span>
                       </div>
@@ -347,7 +347,7 @@ export default function AboutModal({ open, onClose }: Props) {
 
             {/* Footer */}
             <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
-              <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 text-center">
                 All processing happens locally on your machine. No photos are
                 uploaded to any external server.
               </p>

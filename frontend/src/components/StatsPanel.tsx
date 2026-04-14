@@ -189,7 +189,7 @@ export default function StatsPanel({ results, onRowClick }: Props) {
               {fmtDist(stats.meanBest)}
             </p>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              {fmtDist(stats.minTop1)} — {fmtDist(stats.maxTop1)} range
+              {fmtDist(stats.minTop1)} to {fmtDist(stats.maxTop1)} range
             </p>
           </div>
         </div>

@@ -10,9 +10,9 @@ function fmtDist(km: number): string {
 function fmtAddr(
   addr: { city?: string; region?: string; country?: string } | null,
 ): string {
-  if (!addr) return "\u2014";
+  if (!addr) return "Unknown";
   const parts = [addr.city, addr.country].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : "\u2014";
+  return parts.length > 0 ? parts.join(", ") : "Unknown";
 }
 
 interface Props {
@@ -65,7 +65,7 @@ export default function PredictionsTable({
                 } ${onRowClick ? "cursor-pointer hover:bg-gray-50" : ""}`}
               >
                 <td
-                  className={`py-1.5 pr-2 tabular-nums ${isTop ? "text-blue-600 font-semibold" : "text-gray-400"}`}
+                  className={`py-1.5 pr-2 tabular-nums ${isTop ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-gray-500 dark:text-gray-400"}`}
                 >
                   {p.rank}
                 </td>

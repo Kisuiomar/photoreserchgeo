@@ -53,12 +53,10 @@ function fmtTime(ms: number): string {
 
 function qualityLabel(km: number): { text: string; cls: string } {
   if (km < 1) return { text: "Excellent", cls: "text-emerald-600" };
-  if (km < 25) return { text: "Good \u2014 City Level", cls: "text-blue-600" };
-  if (km < 200)
-    return { text: "Fair \u2014 Region Level", cls: "text-amber-600" };
-  if (km < 750)
-    return { text: "Poor \u2014 Country Level", cls: "text-orange-600" };
-  return { text: "Off \u2014 Wrong Region", cls: "text-red-600" };
+  if (km < 25) return { text: "Good: City Level", cls: "text-blue-600" };
+  if (km < 200) return { text: "Fair: Region Level", cls: "text-amber-600" };
+  if (km < 750) return { text: "Poor: Country Level", cls: "text-orange-600" };
+  return { text: "Off: Wrong Region", cls: "text-red-600" };
 }
 
 interface Props {
@@ -103,7 +101,7 @@ export default function ResultCard({ result }: Props) {
           className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
             meta.has_gps
               ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           }`}
         >
           <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
@@ -116,7 +114,7 @@ export default function ResultCard({ result }: Props) {
           GPS
         </span>
 
-        <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums flex-shrink-0">
+        <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums flex-shrink-0">
           {fmtTime(result.processing_time_ms)}
         </span>
       </div>
@@ -145,7 +143,7 @@ export default function ResultCard({ result }: Props) {
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">
                 {formatAddr(top)}
               </p>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-mono mt-0.5">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono mt-0.5">
                 {coord(top.lat, top.lon)}
               </p>
               <GoogleMapsLink lat={top.lat} lon={top.lon} className="mt-1.5" />

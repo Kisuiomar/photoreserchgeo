@@ -165,7 +165,7 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
             <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
               Drop images here to analyze
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">
               or{" "}
               <span className="text-indigo-500 dark:text-indigo-400 font-medium hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
                 browse files
@@ -175,7 +175,7 @@ export default function UploadZone({ onFilesSelected, disabled }: Props) {
               {["JPG", "PNG", "WebP", "TIFF", "BMP"].map((fmt) => (
                 <span
                   key={fmt}
-                  className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md"
+                  className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md"
                 >
                   {fmt}
                 </span>

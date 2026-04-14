@@ -103,7 +103,7 @@ export default function ScanControls({
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-gray-400">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>{eta || "\u00A0"}</span>
             <span>{pct}%</span>
           </div>
@@ -112,7 +112,7 @@ export default function ScanControls({
 
       {status && status.status === "complete" && (
         <p className="text-xs text-emerald-600">
-          Scan complete — {status.total.toLocaleString()} images processed
+          Scan complete · {status.total.toLocaleString()} images processed
         </p>
       )}
 

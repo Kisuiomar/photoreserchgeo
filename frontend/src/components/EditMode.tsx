@@ -225,7 +225,7 @@ export default function EditMode() {
           setStep("scanned");
         }
       } catch {
-        // Session not found on backend — reset
+        // Session not found on backend, reset
         clearPersisted();
         setSessionId(null);
         setStep("config");
@@ -505,7 +505,7 @@ export default function EditMode() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-16 text-center">
         <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-3">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
           Restoring your session…
         </p>
       </div>
@@ -596,7 +596,7 @@ export default function EditMode() {
                   checked={useThreshold}
                   onChange={setUseThreshold}
                   label="Filter low-confidence predictions"
-                  description="Skip predictions below a threshold automatically instead of reviewing them. Not recommended — the model's confidence is often unreliable, and many good predictions have low scores. Leave this off and review every photo manually if you have time."
+                  description="Skip predictions below a threshold automatically instead of reviewing them. Not recommended: the model's confidence is often unreliable, and many good predictions have low scores. Leave this off and review every photo manually if you have time."
                   help="When off (recommended): every photo's best prediction is shown for your review. When on: predictions below the threshold are auto-skipped and you never see them."
                 />
 
@@ -610,7 +610,7 @@ export default function EditMode() {
                     <div className="pl-13 ml-0">
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 flex items-center">
                         Confidence threshold
-                        <span className="ml-2 text-gray-400 dark:text-gray-500 font-normal">
+                        <span className="ml-2 text-gray-500 dark:text-gray-400 font-normal">
                           ({(threshold * 100).toFixed(0)}%)
                         </span>
                         <HelpTip text="Combined score (model confidence + temporal context). Predictions below this are auto-declined. Lower = review more, higher = review fewer but risk missing good predictions." />
@@ -624,9 +624,9 @@ export default function EditMode() {
                         onChange={(e) => setThreshold(Number(e.target.value))}
                         className="w-full accent-indigo-500"
                       />
-                      <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-1">
-                        <span>0% — show all</span>
-                        <span>100% — show almost none</span>
+                      <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                        <span>0%: show all</span>
+                        <span>100%: show almost none</span>
                       </div>
                     </div>
                   </motion.div>
@@ -676,7 +676,7 @@ export default function EditMode() {
           >
             <div className="text-center">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Round 1 — Ready to Analyze
+                Round 1: Ready to Analyze
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Your photo library has been scanned
@@ -742,7 +742,7 @@ export default function EditMode() {
             <div className="flex justify-center">
               <button
                 onClick={resetSession}
-                className="text-xs text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 Cancel and start over
               </button>
@@ -761,7 +761,7 @@ export default function EditMode() {
           >
             <div className="text-center">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Round {currentRound} — Analyzing
+                Round {currentRound}: Analyzing
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {currentRound > 1
@@ -782,7 +782,7 @@ export default function EditMode() {
                 <span className="text-emerald-600 dark:text-emerald-400">
                   {aboveThreshold} above threshold
                 </span>
-                <span className="text-gray-400 dark:text-gray-500">
+                <span className="text-gray-500 dark:text-gray-400">
                   {belowThreshold} below threshold
                 </span>
               </div>
@@ -809,7 +809,7 @@ export default function EditMode() {
             className="bg-white dark:bg-gray-900 border border-yellow-300 dark:border-yellow-700 shadow-sm rounded-2xl p-5 flex items-center justify-between"
           >
             <p className="text-sm text-yellow-600 dark:text-yellow-400">
-              Paused — {processed}/{total} processed
+              Paused · {processed}/{total} processed
             </p>
             <button
               onClick={handleResume}
@@ -831,10 +831,10 @@ export default function EditMode() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center">
-                Round {currentRound} — Review
+                Round {currentRound}: Review
                 <HelpTip text="Each photo's best prediction is shown. Accept to write the GPS into the photo file, Reject to skip, or Manual to type a known address." />
               </h2>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {reviewCount + 1} of {reviewTotal || "?"}
               </span>
             </div>
@@ -844,11 +844,11 @@ export default function EditMode() {
                 <p className="text-xs text-indigo-700 dark:text-indigo-300">
                   <strong>Temporal context:</strong>{" "}
                   {current.temporal_source === "burst"
-                    ? "A GPS-tagged photo was taken within 5 minutes of this one — very high confidence."
+                    ? "A GPS-tagged photo was taken within 5 minutes of this one. Very high confidence."
                     : current.temporal_source === "same_day"
                       ? "A GPS-tagged photo was taken on the same day."
                       : current.temporal_source === "interpolation"
-                        ? "GPS-tagged photos exist before and after this one — location interpolated."
+                        ? "GPS-tagged photos exist before and after this one. Location interpolated."
                         : current.temporal_source === "filename_sequence"
                           ? "Sequential filename match with a GPS-tagged photo in the same folder."
                           : `Context: ${current.temporal_source}`}{" "}
@@ -907,7 +907,7 @@ export default function EditMode() {
                         value={roundSummary.auto_skipped}
                         label="Auto-skipped"
                         sub="Below threshold"
-                        color="text-gray-400 dark:text-gray-500"
+                        color="text-gray-500 dark:text-gray-400"
                       />
                     )}
                   </div>
@@ -1051,13 +1051,13 @@ function StatBox({
         {value}
       </p>
       <div className="flex items-center justify-center">
-        <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           {label}
         </p>
         {help && <HelpTip text={help} />}
       </div>
       {sub && (
-        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
           {sub}
         </p>
       )}

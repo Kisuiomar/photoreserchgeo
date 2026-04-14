@@ -29,13 +29,13 @@ export default function ScanStats({ results, onExport }: Props) {
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
             Library Statistics
           </h3>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {t.toLocaleString()} images scanned
           </p>
         </div>
         <button
           onClick={onExport}
-          className="text-xs text-gray-400 hover:text-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 px-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors"
         >
           Export CSV
         </button>
@@ -67,7 +67,7 @@ export default function ScanStats({ results, onExport }: Props) {
             label="No GPS"
             value={results.without_gps}
             sub={pct(results.without_gps, t)}
-            color="text-gray-500 dark:text-gray-400"
+            color="text-gray-600 dark:text-gray-300"
             help="Photos with no GPS metadata at all. Candidates for AI-based location prediction in the Edit mode."
           />
           <StatBox
@@ -75,7 +75,7 @@ export default function ScanStats({ results, onExport }: Props) {
             value={results.null_island}
             sub={pct(results.null_island, t)}
             color="text-yellow-600 dark:text-yellow-400"
-            help="Photos with GPS coordinates of exactly (0, 0) — a location in the Atlantic Ocean off the African coast. Almost always a bug or broken sensor, not a real location. Named after the fact that this point is in the ocean where no land exists."
+            help="Photos with GPS coordinates of exactly (0, 0), a location in the Atlantic Ocean off the African coast. Almost always a bug or broken sensor, not a real location. Named after the fact that this point is in the ocean where no land exists."
           />
           <StatBox
             label="Errors"
@@ -138,7 +138,7 @@ export default function ScanStats({ results, onExport }: Props) {
         {/* ---- format chips ---- */}
         {formatEntries.length > 0 && (
           <div>
-            <h4 className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+            <h4 className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
               File Formats
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -148,7 +148,7 @@ export default function ScanStats({ results, onExport }: Props) {
                   className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs text-gray-700"
                 >
                   .{fmt}{" "}
-                  <span className="text-gray-400">
+                  <span className="text-gray-500 dark:text-gray-400">
                     {count.toLocaleString()}
                   </span>
                 </span>
@@ -162,7 +162,7 @@ export default function ScanStats({ results, onExport }: Props) {
           <div>
             <button
               onClick={() => setDirOpen(!dirOpen)}
-              className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400 uppercase tracking-wider hover:text-gray-700 transition-colors"
+              className="flex items-center gap-1.5 text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 transition-colors"
             >
               <svg
                 className={`w-3 h-3 transition-transform ${dirOpen ? "rotate-90" : ""}`}
@@ -183,7 +183,7 @@ export default function ScanStats({ results, onExport }: Props) {
               <div className="mt-2 max-h-64 overflow-y-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-gray-400 border-b border-gray-200">
+                    <tr className="text-gray-500 dark:text-gray-400 border-b border-gray-200">
                       <th className="text-left py-1.5 pr-3 font-medium">
                         Directory
                       </th>
@@ -214,7 +214,7 @@ export default function ScanStats({ results, onExport }: Props) {
                         <td className="py-1.5 pr-3 text-right tabular-nums text-emerald-600">
                           {d.with_gps}
                         </td>
-                        <td className="py-1.5 text-right tabular-nums text-gray-400">
+                        <td className="py-1.5 text-right tabular-nums text-gray-500 dark:text-gray-400">
                           {d.without_gps}
                         </td>
                       </tr>
@@ -246,7 +246,7 @@ function StatBox({
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
       <div className="flex items-center justify-center">
-        <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">
           {label}
         </p>
         {help && <HelpTip text={help} />}
@@ -256,7 +256,9 @@ function StatBox({
       >
         {value.toLocaleString()}
       </p>
-      {sub && <p className="text-[10px] text-gray-400">{sub}</p>}
+      {sub && (
+        <p className="text-[10px] text-gray-500 dark:text-gray-400">{sub}</p>
+      )}
     </div>
   );
 }

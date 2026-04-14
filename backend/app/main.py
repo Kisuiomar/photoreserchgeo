@@ -95,7 +95,14 @@ async def health() -> dict:
 
 @app.get("/api/system-status")
 async def system_status() -> dict:
-    """Return memory usage and model state for the header indicator."""
+    """Return memory usage and model state for the header indicator.
+
+    Four possible model states:
+      * ``not_downloaded``: weights not yet on disk
+      * ``downloaded``: on disk but not loaded in RAM
+      * ``loaded``: in RAM, idle
+      * ``in_use``: actively running inference right now
+    """
     import os
     import psutil
 
@@ -104,12 +111,17 @@ async def system_status() -> dict:
     proc_rss = proc.memory_info().rss
 
     loaded = model.is_loaded()
-    # Determine model state
-    # "not_downloaded" can't easily be detected at runtime so we skip it
-    if loaded:
-        state = "loaded"  # in memory, ready to use
+    in_use = model.is_in_use()
+    downloaded = model.is_downloaded() or loaded
+
+    if in_use:
+        state = "in_use"
+    elif loaded:
+        state = "loaded"
+    elif downloaded:
+        state = "downloaded"
     else:
-        state = "idle"  # downloaded but not loaded
+        state = "not_downloaded"
 
     return {
         "memory_used_gb": round(mem.used / (1024**3), 1),
@@ -118,6 +130,8 @@ async def system_status() -> dict:
         "process_memory_gb": round(proc_rss / (1024**3), 2),
         "model_state": state,
         "model_loaded": loaded,
+        "model_in_use": in_use,
+        "model_downloaded": downloaded,
     }
 
 
