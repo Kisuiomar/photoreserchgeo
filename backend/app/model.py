@@ -16,10 +16,59 @@ logger = logging.getLogger(__name__)
 _model = None
 _loaded = False
 _downloaded = False  # becomes True once the model files exist on disk
+_downloading = False  # True while the HuggingFace download is in progress
 _in_use_count = 0  # atomic-ish counter for concurrent inference calls
 _lock = threading.Lock()
 _last_used = 0.0
 _timer: threading.Timer | None = None
+
+# Expected total download size (HuggingFace CLIP-ViT-L/14 ~= 1.7 GB + some overhead).
+# Used only for estimating progress percentage; not a hard cap.
+_EXPECTED_DOWNLOAD_BYTES = int(1.75 * 1024 * 1024 * 1024)
+
+# Paths we monitor to estimate download progress.
+_HF_CACHE_ROOT = os.path.expanduser("~/.cache/huggingface/hub")
+
+
+def _dir_size(path: str) -> int:
+    """Sum of all file sizes under *path*. Returns 0 if the path is missing."""
+    if not os.path.isdir(path):
+        return 0
+    total = 0
+    for root, _dirs, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.path.getsize(os.path.join(root, f))
+            except OSError:
+                continue
+    return total
+
+
+def is_downloading() -> bool:
+    return _downloading
+
+
+def download_progress() -> dict:
+    """Report approximate download progress for the HF model weights.
+
+    When ``is_downloaded`` returns True the download is done.  Otherwise this
+    reports the current cache size so the UI can render a progress bar.
+    """
+    bytes_on_disk = _dir_size(_HF_CACHE_ROOT)
+    if is_downloaded():
+        return {
+            "bytes": bytes_on_disk,
+            "total_bytes": max(bytes_on_disk, _EXPECTED_DOWNLOAD_BYTES),
+            "percent": 100,
+            "downloading": False,
+        }
+    percent = min(99, int(bytes_on_disk * 100 / _EXPECTED_DOWNLOAD_BYTES))
+    return {
+        "bytes": bytes_on_disk,
+        "total_bytes": _EXPECTED_DOWNLOAD_BYTES,
+        "percent": percent,
+        "downloading": _downloading,
+    }
 
 
 def is_downloaded() -> bool:
@@ -59,7 +108,11 @@ def is_downloaded() -> bool:
     except Exception:
         pass
 
-    # 2. HuggingFace CLIP backbone snapshot
+    # 2. HuggingFace CLIP backbone snapshot.  Require a substantial size
+    # so a partial download in progress isn't misreported as complete.
+    # The CLIP ViT-L/14 weights are ~1.6 GB; we require at least 1 GB to
+    # avoid false positives but stay tolerant of reasonable file variations.
+    _MIN_BACKBONE_BYTES = 1_000_000_000
     hf_candidates = [
         os.path.expanduser(
             "~/.cache/huggingface/hub/models--openai--clip-vit-large-patch14"
@@ -69,15 +122,8 @@ def is_downloaded() -> bool:
         ),
     ]
     for c in hf_candidates:
-        snapshots = os.path.join(c, "snapshots")
-        if os.path.isdir(snapshots):
-            # at least one snapshot subdir with real content
-            for entry in os.listdir(snapshots):
-                full = os.path.join(snapshots, entry)
-                if os.path.isdir(full) and os.listdir(full):
-                    have_clip_backbone = True
-                    break
-        if have_clip_backbone:
+        if os.path.isdir(c) and _dir_size(c) >= _MIN_BACKBONE_BYTES:
+            have_clip_backbone = True
             break
 
     if have_geoclip_weights and have_clip_backbone:
@@ -108,23 +154,31 @@ def _check_idle() -> None:
 
 
 def _ensure_loaded() -> None:
-    global _model, _loaded, _last_used
+    global _model, _loaded, _last_used, _downloading, _downloaded
     with _lock:
         _last_used = time.time()
         if _loaded and _model is not None:
             _schedule_unload()
             return
-        logger.info("Loading GeoCLIP model...")
+        needs_download = not is_downloaded()
+        if needs_download:
+            _downloading = True
+            logger.info("Downloading GeoCLIP backbone (first-run, ~1.7 GB)...")
+        else:
+            logger.info("Loading GeoCLIP model into RAM...")
         try:
             from geoclip import GeoCLIP
 
             _model = GeoCLIP()
             _loaded = True
+            _downloaded = True
             logger.info("GeoCLIP loaded and ready")
             _schedule_unload()
         except Exception:
             logger.exception("Failed to load GeoCLIP")
             _loaded = False
+        finally:
+            _downloading = False
 
 
 def unload() -> None:

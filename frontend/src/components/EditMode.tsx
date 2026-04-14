@@ -956,20 +956,14 @@ export default function EditMode() {
             </div>
 
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm rounded-2xl p-5 space-y-4">
-              <div className="flex gap-2">
-                <button
-                  onClick={handleRollbackAll}
-                  className="flex-1 py-2.5 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl transition-colors border border-red-200 dark:border-red-800"
-                >
-                  Rollback All
-                </button>
-                <button
-                  onClick={handleCleanup}
-                  className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl transition-colors"
-                >
-                  Clean Up Backups
-                </button>
-              </div>
+              {/*
+                FUTURE FEATURE: backup + rollback UI. `handleRollbackAll` and
+                `handleCleanup` are still wired in this component; they hit
+                the backend endpoints and work as long as gps_writer is
+                re-configured to create `_original` backup files (drop the
+                `-overwrite_original` flag). Buttons hidden here until that
+                flow is polished.
+              */}
               <button
                 onClick={resetSession}
                 className="w-full py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-xl transition-colors"

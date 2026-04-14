@@ -111,6 +111,7 @@ async def system_status() -> dict:
 
     loaded = model.is_loaded()
     downloaded = model.is_downloaded() or loaded
+    downloading = model.is_downloading()
 
     if loaded:
         state = "loaded"
@@ -118,6 +119,8 @@ async def system_status() -> dict:
         state = "downloaded"
     else:
         state = "not_downloaded"
+
+    progress = model.download_progress()
 
     return {
         "memory_used_gb": round(mem.used / (1024**3), 1),
@@ -127,7 +130,30 @@ async def system_status() -> dict:
         "model_state": state,
         "model_loaded": loaded,
         "model_downloaded": downloaded,
+        "model_downloading": downloading,
+        "download_progress": progress,
     }
+
+
+@app.post("/api/download-model")
+async def download_model() -> dict:
+    """Trigger model download in the background so the frontend can render
+    progress without having to wait on the blocking predict call."""
+    import threading
+
+    if model.is_loaded():
+        return {"status": "already_loaded"}
+    if model.is_downloading():
+        return {"status": "already_downloading"}
+
+    def _bg():
+        try:
+            model._ensure_loaded()  # noqa: SLF001
+        except Exception:
+            logger.exception("Background model download failed")
+
+    threading.Thread(target=_bg, daemon=True).start()
+    return {"status": "started"}
 
 
 @app.post("/api/unload-models")

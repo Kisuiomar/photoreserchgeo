@@ -1,12 +1,19 @@
-"""Safe, validated EXIF GPS writing with pre-write checks and rollback.
+"""Safe, validated EXIF GPS writing with pre-write checks.
 
 Three-layer defence:
-  1. Queue filter — only GPS-less images enter the queue (edit_session.py)
-  2. Pre-write check — detect_gps() one final time before ANY write
-  3. Post-write validation — read back and verify coordinates match
+  1. Queue filter: only GPS-less images enter the queue (edit_session.py)
+  2. Pre-write check: detect_gps() one final time before ANY write
+  3. Post-write validation: read back and verify coordinates match
 
-The pre-write check in layer 2 is NON-BYPASSABLE.  Even if a bug
-lets a GPS-bearing image through layers 0 and 1, this catches it.
+The pre-write check in layer 2 is NON-BYPASSABLE. Even if a bug lets a
+GPS-bearing image through the previous layers, this catches it.
+
+FUTURE FEATURE: backup + rollback. exiftool has a built-in backup system
+that writes `<file>_original` copies before modifying, which ``rollback_single``
+/ ``cleanup_backup`` below consume. That path is currently disabled via
+the ``-overwrite_original`` flag in ``write_gps`` because most users
+found the resulting backup files confusing. Removing that flag re-enables
+the whole rollback story without any further code changes.
 """
 
 import logging
@@ -123,7 +130,12 @@ def write_gps(
         args.append(f"-GPSProcessingMethod={method}")
         args.append(f"-UserComment=GeoScope:estimated:{now_iso}")
 
-    # NO -overwrite_original — backup is our safety net
+    # FUTURE FEATURE: automatic backup files via exiftool's default `_original`
+    # behavior. To re-enable, remove the `-overwrite_original` flag below, and
+    # the rollback endpoints / cleanup-backups endpoint (already wired) will
+    # work again. For now we overwrite in place since users have expressed
+    # that the backup files are clutter.
+    args.append("-overwrite_original")
     args.append(image_path)
 
     log(f"WRITING GPS: lat={lat}, lon={lon}, estimated={estimated}")
