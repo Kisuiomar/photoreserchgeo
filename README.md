@@ -47,7 +47,9 @@ This tool gives them their place back. You drop a photo in and a deep learning m
 | [Overview](#overview) | Point at a folder, see what has GPS and what does not.             | You want to understand your library before editing anything.                 |
 | [Edit](#edit)         | Let the AI fill in missing coordinates. You just accept or reject. | You want to enrich a pile of photos so they show up on your photo app's map. |
 
-### Explore
+---
+
+## Explore
 
 Drop any photo into the upload zone and you get a world map with the AI's top five guesses, the top pick's address, and a distance-to-truth benchmark if the photo already had GPS.
 
@@ -55,21 +57,31 @@ Drop any photo into the upload zone and you get a world map with the AI's top fi
   <img src="docs/screenshots/explore_melbourne.png" alt="An apartment interior in Melbourne, predicted as Southbank, off by 800 m" width="880">
 </p>
 
+> Floor-to-ceiling windows, a dining table, no obvious landmark. The AI predicted **Southbank, Victoria**. The truth was **Docklands, Victoria**, about 800 metres away.
+
 <p align="center">
   <img src="docs/screenshots/explore_un_hall.png" alt="The UN General Assembly Hall, predicted as Long Island City, off by 79 m" width="880">
 </p>
+
+> All five top predictions landed on **Long Island City, New York**. Off by **79 metres**. Essentially perfect.
 
 <p align="center">
   <img src="docs/screenshots/explore_sydney.png" alt="A street in Sydney, predicted correctly, off by 340 m" width="880">
 </p>
 
+> Predicted **Sydney, NSW**. Off by **340 metres**.
+
 <p align="center">
   <img src="docs/screenshots/explore_fiji.png" alt="An infinity pool in Fiji, predicted as Nadi, off by 6 km" width="880">
 </p>
 
+> Palms, turquoise water, no street signs. Predicted **Nadi, Western, Fiji**. Off by about **6 kilometres**, still in the right area.
+
 <p align="center">
   <img src="docs/screenshots/explore_gold_coast.png" alt="Gold Coast at night, predicted as Surfers Paradise, off by 410 m" width="880">
 </p>
+
+> Predicted **Surfers Paradise, Queensland**. Truth **Gold Coast, Queensland**. Off by **410 metres**. Night shots work too.
 
 Up to 50 photos at once. The map populates live as each one finishes.
 
@@ -77,7 +89,11 @@ Up to 50 photos at once. The map populates live as each one finishes.
   <img src="docs/screenshots/explore_batch_processing.png" alt="Batch processing in Explore mode with a world map filling up live" width="880">
 </p>
 
-### Overview
+> A batch of 38 photos being processed. 23 done, about 4 minutes remaining, and the results drop onto the world map as they arrive.
+
+---
+
+## Overview
 
 Point it at a folder. Every image is sorted into `Real GPS`, `Estimated GPS` (coordinates written by this tool earlier), `No GPS`, `Null Island` (the classic (0, 0) bug), or `Errors`. Coordinates appear on a world map so the gaps are easy to spot.
 
@@ -85,9 +101,13 @@ Point it at a folder. Every image is sorted into `Real GPS`, `Estimated GPS` (co
   <img src="docs/screenshots/overview_library_stats.png" alt="Overview mode library statistics with a map" width="880">
 </p>
 
+> A tiny example library with one photo. At the scale of a real camera roll this becomes a dense heat map of where you have been and where the GPS holes are.
+
 Read-only. Nothing is modified. A natural first step before running the Edit mode.
 
-### Edit
+---
+
+## Edit
 
 The main feature. A guided flow for filling in missing GPS coordinates. The AI does the heavy lifting, you click accept or reject on its suggestions. You never have to type an address unless you want to override a prediction.
 
@@ -97,6 +117,8 @@ The main feature. A guided flow for filling in missing GPS coordinates. The AI d
   <img src="docs/screenshots/edit_config.png" alt="Edit mode configuration screen" width="880">
 </p>
 
+> Configuration screen. Directory path, optional confidence filter, optional re-processing of previously predicted photos. The safety guarantee at the bottom is not decoration: real camera GPS is actually never touched.
+
 **Step 2.** The model runs through every candidate photo. Photos taken close in time to GPS-tagged photos get a confidence bonus, because people cannot teleport.
 
 **Step 3.** Review each suggestion, one photo at a time. `A` or `Enter` to accept, `R` or `Esc` to reject, `M` for a manual address.
@@ -104,6 +126,8 @@ The main feature. A guided flow for filling in missing GPS coordinates. The AI d
 <p align="center">
   <img src="docs/screenshots/edit_review.png" alt="Edit mode review screen with accept, reject, manual buttons" width="880">
 </p>
+
+> One photo at a time. The AI shows its top pick plus four alternatives, three big buttons drive the decision, and the privacy reminder at the bottom makes the guarantee explicit.
 
 Accepted coordinates go straight into the photo's EXIF, tagged `ESTIMATED` so you can always tell real GPS from predicted GPS later. A hundred photos take about ten minutes.
 
