@@ -45,7 +45,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="WhereWasThisTaken?", lifespan=lifespan)
+app = FastAPI(title="FindMyPhoto", lifespan=lifespan)
 app.include_router(scan_router)
 app.include_router(edit_router)
 

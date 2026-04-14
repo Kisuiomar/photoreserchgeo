@@ -7,7 +7,7 @@ interface Props {
 
 const STEPS = [
   {
-    title: "Welcome to WhereWasThisTaken?",
+    title: "Welcome to FindMyPhoto",
     body: "This app uses AI to predict where your photos were taken. It can also write GPS coordinates into photos that are missing them. Let's walk through how it works.",
     extra:
       "Your photos never leave your computer. Scanning, inference, and writing all happen locally on this machine. No data is uploaded anywhere.",

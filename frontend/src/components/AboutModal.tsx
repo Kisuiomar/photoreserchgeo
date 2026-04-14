@@ -192,7 +192,7 @@ export default function AboutModal({ open, onClose }: Props) {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
-                      WhereWasThisTaken?
+                      FindMyPhoto
                     </h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       AI-powered photo geolocation

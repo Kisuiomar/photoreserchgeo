@@ -1,6 +1,6 @@
 <div align="center">
 
-# WhereWasThisTaken?
+# FindMyPhoto
 
 ### A self-hosted tool that predicts where any photo was taken, running entirely on the user's own machine.
 
@@ -151,8 +151,8 @@ All processing takes place on the host machine.
 Requirements: Docker Engine 24+ and Docker Compose v2. Supported on Linux, macOS, and Windows via WSL2. Approximately 4 GB of free disk is needed for the model cache and 4 GB of free RAM while the model is loaded.
 
 ```bash
-git clone https://github.com/M-Enzinger/where-was-this-taken.git
-cd where-was-this-taken
+git clone https://github.com/M-Enzinger/findmyphoto.git
+cd findmyphoto
 cp .env.example .env
 docker compose up
 ```

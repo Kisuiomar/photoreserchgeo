@@ -128,7 +128,7 @@ def write_gps(
     if estimated:
         method = f"charset=Ascii ESTIMATED:GEOCLIP:v1.2.0:{now_iso}"
         args.append(f"-GPSProcessingMethod={method}")
-        args.append(f"-UserComment=GeoScope:estimated:{now_iso}")
+        args.append(f"-UserComment=FindMyPhoto:estimated:{now_iso}")
 
     # FUTURE FEATURE: automatic backup files via exiftool's default `_original`
     # behavior. To re-enable, remove the `-overwrite_original` flag below, and

@@ -125,7 +125,7 @@ export default function App() {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-2.5 max-w-6xl mx-auto gap-4">
           {/* Logo */}
           <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent select-none justify-self-start">
-            WhereWasThisTaken?
+            FindMyPhoto
           </span>
 
           {/* Tab navigation, centered */}

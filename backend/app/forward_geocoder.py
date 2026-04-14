@@ -8,7 +8,7 @@ from geopy.geocoders import Nominatim
 
 logger = logging.getLogger(__name__)
 
-_geolocator = Nominatim(user_agent="geoscope-edit-mode/1.0")
+_geolocator = Nominatim(user_agent="findmyphoto-edit-mode/1.0")
 _rate_lock = threading.Lock()
 _last_request = 0.0
 
