@@ -1,14 +1,23 @@
-"""Edit-mode session manager — round-based GPS prediction.
+"""Edit-mode session manager.
 
-Pipeline:
-  1. Scan directory, classify images (real GPS / predicted GPS / no GPS)
-  2. Round N: predict locations for unlocated images using:
-     - GeoCLIP model inference
-     - Temporal proximity to GPS-tagged photos (including accepted predictions)
-  3. Compute combined confidence score (model + temporal context)
-  4. Filter by threshold: above → queue for review, below → auto-skip
-  5. User reviews: accept / reject / manual
-  6. Round N+1: recompute with expanded GPS reference set
+Current pipeline (single-pass):
+  1. Scan directory, classify images (real GPS / predicted GPS / no GPS).
+  2. Predict locations for unlocated images using:
+       - GeoCLIP model inference
+       - Temporal proximity to GPS-tagged photos
+  3. Compute combined confidence score (model + temporal context).
+  4. Filter by threshold (if enabled): above -> queue for review, below -> skip.
+  5. User reviews each prediction: accept / reject / manual.
+
+Round-based iterative improvement (FUTURE FEATURE, wiring preserved):
+  The original design runs the above pipeline in multiple rounds. Each round
+  recomputes temporal hints with the expanded GPS reference set (real GPS +
+  accepted predictions from previous rounds), so photos that fell below the
+  threshold in earlier rounds may cross it once nearby photos become
+  references. The `rounds` dict, `current_round` counter, `start_round()`
+  method and the `/edit/{sid}/round` endpoint are all retained to make
+  re-enabling this a UI-only change. The frontend currently only exposes a
+  single round.
 
 Key safety invariant: images with REAL GPS are NEVER modified.
 """

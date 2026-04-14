@@ -28,10 +28,10 @@ const STEPS = [
     icon: "grid",
   },
   {
-    title: "Edit Mode: Round-based Prediction",
-    body: "This is the main feature. It works in rounds: each round predicts locations for photos without GPS, you review every prediction and decide whether to accept, reject, or enter a manual address.",
+    title: "Edit Mode: Predict and Write GPS",
+    body: "This is the main feature. It scans your library, predicts a location for every photo missing GPS, and lets you review each prediction and decide whether to accept, reject, or enter a manual address.",
     extra:
-      "The clever part: once you accept a location, that photo becomes a new reference point. So in round 2, a photo taken 3 minutes after your newly-accepted photo gets a huge confidence boost from temporal proximity. You can keep iterating until no more photos can be located. Real GPS coordinates from your camera are never touched. Only photos missing GPS are ever modified, and every write creates a backup you can roll back.",
+      "Temporal proximity boosts accuracy: a photo taken 3 minutes after a GPS-tagged photo gets a huge confidence bonus from the neighboring location. Real GPS coordinates from your camera are never touched. Only photos missing GPS are ever modified, and every write creates a backup you can roll back.",
     icon: "edit",
   },
   {

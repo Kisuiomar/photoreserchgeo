@@ -556,24 +556,24 @@ export default function EditMode() {
                   How it works
                   <HelpTip
                     width={320}
-                    text="Edit mode runs in rounds. Each round predicts locations for photos without GPS, lets you review and accept/decline each prediction, and then uses your accepted locations as new reference points for the next round. A photo taken 2 minutes after an accepted photo becomes very easy to predict."
+                    text="Edit mode scans your library, predicts a location for every photo without GPS using AI, and lets you review each prediction before writing it to the file. Photos taken close in time to GPS-tagged photos receive a strong confidence bonus from temporal proximity."
                   />
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <StepExplainer
                     num={1}
-                    title="Analyze"
-                    desc="AI predicts a location for every photo without GPS, boosted by temporal proximity to existing GPS-tagged photos."
+                    title="Scan"
+                    desc="We find all photos in your library that are missing GPS data. Photos with real GPS are skipped, never modified."
                   />
                   <StepExplainer
                     num={2}
-                    title="Review"
-                    desc="You decide for each photo: accept the prediction, reject it, or enter a manual address."
+                    title="Analyze"
+                    desc="AI predicts a location for every candidate. Photos taken close in time to GPS-tagged photos get a strong confidence bonus."
                   />
                   <StepExplainer
                     num={3}
-                    title="Iterate"
-                    desc="Accepted locations become new reference points. Run another round to locate photos that weren't confident enough before."
+                    title="Review"
+                    desc="You decide for each photo: accept the prediction, reject it, or enter a manual address. Accepted locations are written to the file."
                   />
                 </div>
               </div>
@@ -679,7 +679,7 @@ export default function EditMode() {
           >
             <div className="text-center">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Round 1: Ready to Analyze
+                Ready to Analyze
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Your photo library has been scanned
@@ -764,12 +764,11 @@ export default function EditMode() {
           >
             <div className="text-center">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Round {currentRound}: Analyzing
+                Analyzing
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {currentRound > 1
-                  ? `Using ${roundInfo?.reference_gps ?? 0} reference photos (real GPS + accepted predictions)`
-                  : `Using ${roundInfo?.reference_gps ?? 0} GPS-tagged photos as context`}
+                Using {roundInfo?.reference_gps ?? 0} GPS-tagged photos as
+                temporal context
               </p>
             </div>
 
@@ -834,7 +833,7 @@ export default function EditMode() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center">
-                Round {currentRound}: Review
+                Review Predictions
                 <HelpTip text="Each photo's best prediction is shown. Accept to write the GPS into the photo file, Reject to skip, or Manual to type a known address." />
               </h2>
               <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -886,7 +885,7 @@ export default function EditMode() {
           >
             <div className="text-center">
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                Round {currentRound} Complete
+                Analysis Complete
               </h2>
             </div>
 
@@ -916,44 +915,22 @@ export default function EditMode() {
                   </div>
                 </div>
 
-                {roundSummary.remaining_unlocated > 0 && (
-                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-2xl p-4 space-y-2">
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      Why another round helps
-                    </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
-                      You just accepted{" "}
-                      <strong>{roundSummary.accepted} new GPS locations</strong>
-                      . Photos taken close in time to these newly-located photos
-                      may now be predictable. If you accepted a photo from 14:02
-                      and there's an unlocated photo from 14:04, it can now use
-                      the accepted location as context.
-                    </p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                      {roundSummary.remaining_unlocated} photos still without
-                      GPS.
-                    </p>
-                  </div>
-                )}
+                {/*
+                  FUTURE FEATURE: round-based iterative improvement.
+                  The backend and API still support multiple rounds. When
+                  re-enabled, show a panel here that explains how accepted
+                  predictions become new reference points for the next round
+                  and offers a "Start next round" button.
+                  The old UI block referenced `roundSummary.remaining_unlocated`
+                  and `handleStartRound`; both are still wired up.
+                */}
 
-                <div className="flex gap-3">
-                  {roundSummary.remaining_unlocated > 0 &&
-                    roundSummary.accepted > 0 && (
-                      <button
-                        onClick={handleStartRound}
-                        disabled={busy}
-                        className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 text-white font-medium rounded-xl transition-all shadow-sm hover:shadow-md"
-                      >
-                        {busy ? "Starting…" : `Start Round ${currentRound + 1}`}
-                      </button>
-                    )}
-                  <button
-                    onClick={() => setStep("session_complete")}
-                    className={`${roundSummary.remaining_unlocated > 0 && roundSummary.accepted > 0 ? "flex-1" : "w-full"} py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors`}
-                  >
-                    Finish Session
-                  </button>
-                </div>
+                <button
+                  onClick={() => setStep("session_complete")}
+                  className="w-full py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors"
+                >
+                  Finish Session
+                </button>
               </>
             )}
           </motion.div>
@@ -973,7 +950,7 @@ export default function EditMode() {
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {currentRound > 0
-                  ? `Completed ${currentRound} round${currentRound > 1 ? "s" : ""} of analysis`
+                  ? "Analysis finished"
                   : "No photos to process"}
               </p>
             </div>

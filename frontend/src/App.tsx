@@ -220,21 +220,10 @@ export default function App() {
                           <span className="w-2 h-2 rounded-full bg-emerald-400 mt-1 flex-shrink-0" />
                           <div>
                             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                              Loaded, idle
+                              Loaded
                             </span>
                             <p className="text-[11px] text-gray-600 dark:text-gray-300">
                               In RAM, ready to respond instantly.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse mt-1 flex-shrink-0" />
-                          <div>
-                            <span className="font-semibold text-amber-600 dark:text-amber-400">
-                              In use
-                            </span>
-                            <p className="text-[11px] text-gray-600 dark:text-gray-300">
-                              Actively running inference right now.
                             </p>
                           </div>
                         </div>
