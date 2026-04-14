@@ -17,17 +17,20 @@ _model = None
 _loaded = False
 _downloaded = False  # becomes True once the model files exist on disk
 _downloading = False  # True while the HuggingFace download is in progress
+_download_max_bytes = 0  # monotonically-increasing high-water mark
 _in_use_count = 0  # atomic-ish counter for concurrent inference calls
 _lock = threading.Lock()
 _last_used = 0.0
 _timer: threading.Timer | None = None
 
-# Expected total download size (HuggingFace CLIP-ViT-L/14 ~= 1.7 GB + some overhead).
-# Used only for estimating progress percentage; not a hard cap.
-_EXPECTED_DOWNLOAD_BYTES = int(1.75 * 1024 * 1024 * 1024)
+# Expected total download size.  GeoCLIP pulls CLIP-ViT-L/14 which includes
+# both the safetensors and pytorch_model.bin formats plus the Xet chunk
+# staging cache, so real-world sizes hover around 3.5 GB on first run.
+_EXPECTED_DOWNLOAD_BYTES = int(3.5 * 1024 * 1024 * 1024)
 
-# Paths we monitor to estimate download progress.
-_HF_CACHE_ROOT = os.path.expanduser("~/.cache/huggingface/hub")
+# Monitor the whole HuggingFace cache (hub/ for finalized blobs + xet/ for
+# in-progress chunk staging used by the new Xet transfer protocol).
+_HF_CACHE_ROOT = os.path.expanduser("~/.cache/huggingface")
 
 
 def _dir_size(path: str) -> int:
@@ -51,20 +54,26 @@ def is_downloading() -> bool:
 def download_progress() -> dict:
     """Report approximate download progress for the HF model weights.
 
-    When ``is_downloaded`` returns True the download is done.  Otherwise this
-    reports the current cache size so the UI can render a progress bar.
+    Sizes are measured from the entire HuggingFace cache tree (finalized
+    blobs in ``hub/`` plus in-progress Xet chunks in ``xet/``) and clamped
+    to be monotonically increasing so the bar never ticks backwards.
     """
+    global _download_max_bytes
     bytes_on_disk = _dir_size(_HF_CACHE_ROOT)
+    if bytes_on_disk > _download_max_bytes:
+        _download_max_bytes = bytes_on_disk
+    effective = _download_max_bytes
+
     if is_downloaded():
         return {
-            "bytes": bytes_on_disk,
-            "total_bytes": max(bytes_on_disk, _EXPECTED_DOWNLOAD_BYTES),
+            "bytes": effective,
+            "total_bytes": max(effective, _EXPECTED_DOWNLOAD_BYTES),
             "percent": 100,
             "downloading": False,
         }
-    percent = min(99, int(bytes_on_disk * 100 / _EXPECTED_DOWNLOAD_BYTES))
+    percent = min(99, int(effective * 100 / _EXPECTED_DOWNLOAD_BYTES))
     return {
-        "bytes": bytes_on_disk,
+        "bytes": effective,
         "total_bytes": _EXPECTED_DOWNLOAD_BYTES,
         "percent": percent,
         "downloading": _downloading,
