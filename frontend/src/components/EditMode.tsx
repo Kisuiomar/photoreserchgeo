@@ -204,7 +204,9 @@ export default function EditMode() {
         } else if (info.status === "processing") {
           setStep("processing");
         } else if (
+          info.status === "review" ||
           info.status === "reviewing" ||
+          info.round_status === "review" ||
           info.round_pending_review > 0
         ) {
           setReviewTotal(info.round_above_threshold);
@@ -301,9 +303,10 @@ export default function EditMode() {
         setCurrentImage(s.current_image);
 
         if (
+          s.status === "review" ||
           s.status === "reviewing" ||
-          s.status === "round_complete" ||
-          s.status === "complete"
+          s.status === "complete" ||
+          s.status === "round_complete"
         ) {
           clearInterval(poll);
           if ((s.above_threshold ?? 0) > 0) {

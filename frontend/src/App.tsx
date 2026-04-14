@@ -34,35 +34,26 @@ interface SystemStatus {
   memory_used_gb: number;
   memory_total_gb: number;
   memory_percent: number;
-  model_state: "not_downloaded" | "downloaded" | "loaded" | "in_use";
+  model_state: "not_downloaded" | "downloaded" | "loaded";
   model_loaded: boolean;
-  model_in_use: boolean;
   model_downloaded: boolean;
 }
 
 const MODEL_STATE_META: Record<
   SystemStatus["model_state"],
-  { label: string; dot: string; pulse: boolean }
+  { label: string; dot: string }
 > = {
   not_downloaded: {
     label: "Not downloaded",
     dot: "bg-slate-400 dark:bg-slate-500",
-    pulse: false,
   },
   downloaded: {
     label: "Downloaded",
     dot: "bg-blue-400 dark:bg-blue-400 shadow-blue-400/50",
-    pulse: false,
   },
   loaded: {
-    label: "Loaded, idle",
+    label: "Loaded",
     dot: "bg-emerald-400 dark:bg-emerald-400 shadow-emerald-400/50",
-    pulse: false,
-  },
-  in_use: {
-    label: "In use",
-    dot: "bg-amber-400 dark:bg-amber-400 shadow-amber-400/70",
-    pulse: true,
   },
 };
 
