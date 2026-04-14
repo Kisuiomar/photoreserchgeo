@@ -23,35 +23,66 @@ _timer: threading.Timer | None = None
 
 
 def is_downloaded() -> bool:
-    """Check whether the GeoCLIP model weights exist locally.
+    """Check whether GeoCLIP weights are cached locally.
 
-    The geoclip package caches weights under the user's home directory.
-    We probe a small set of likely cache paths.
+    GeoCLIP ships some weights inside its package directory
+    (``geoclip/model/weights``) but also pulls the backbone CLIP vision
+    encoder from HuggingFace hub on first use.  We consider the model
+    "downloaded" when both the GeoCLIP weights and the HF CLIP snapshot
+    exist on disk.
     """
     global _downloaded
     if _downloaded:
         return True
-    # Check common cache locations
-    candidates = [
-        os.path.expanduser("~/.cache/huggingface/hub/models--Geolocal--GeoCLIP"),
-        os.path.expanduser("~/.cache/geoclip"),
-        os.path.expanduser("~/.cache/torch/hub/checkpoints"),
-    ]
-    for c in candidates:
-        if os.path.isdir(c) and os.listdir(c):
-            _downloaded = True
-            return True
-    # If the package's install dir has the weights, count it as downloaded
+
+    have_geoclip_weights = False
+    have_clip_backbone = False
+
+    # 1. GeoCLIP's own weights (ship with the package or in user cache)
     try:
         import geoclip
 
         pkg_dir = os.path.dirname(geoclip.__file__)
-        weights_dir = os.path.join(pkg_dir, "weights")
-        if os.path.isdir(weights_dir) and os.listdir(weights_dir):
-            _downloaded = True
-            return True
+        for candidate in (
+            os.path.join(pkg_dir, "model", "weights"),
+            os.path.join(pkg_dir, "weights"),
+        ):
+            if os.path.isdir(candidate):
+                files = [
+                    f
+                    for f in os.listdir(candidate)
+                    if f.endswith((".pt", ".pth", ".bin", ".safetensors"))
+                ]
+                if files:
+                    have_geoclip_weights = True
+                    break
     except Exception:
         pass
+
+    # 2. HuggingFace CLIP backbone snapshot
+    hf_candidates = [
+        os.path.expanduser(
+            "~/.cache/huggingface/hub/models--openai--clip-vit-large-patch14"
+        ),
+        os.path.expanduser(
+            "~/.cache/huggingface/hub/models--openai--clip-vit-base-patch32"
+        ),
+    ]
+    for c in hf_candidates:
+        snapshots = os.path.join(c, "snapshots")
+        if os.path.isdir(snapshots):
+            # at least one snapshot subdir with real content
+            for entry in os.listdir(snapshots):
+                full = os.path.join(snapshots, entry)
+                if os.path.isdir(full) and os.listdir(full):
+                    have_clip_backbone = True
+                    break
+        if have_clip_backbone:
+            break
+
+    if have_geoclip_weights and have_clip_backbone:
+        _downloaded = True
+        return True
     return False
 
 
