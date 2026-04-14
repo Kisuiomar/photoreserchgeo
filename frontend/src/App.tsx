@@ -37,13 +37,6 @@ interface SystemStatus {
   model_state: "not_downloaded" | "downloaded" | "loaded";
   model_loaded: boolean;
   model_downloaded: boolean;
-  model_downloading: boolean;
-  download_progress: {
-    bytes: number;
-    total_bytes: number;
-    percent: number;
-    downloading: boolean;
-  };
 }
 
 const MODEL_STATE_META: Record<
@@ -83,7 +76,9 @@ export default function App() {
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
 
-  // Poll system status. Faster cadence while model is actively in use.
+  // Poll the backend for live memory + model state. Backend is only
+  // reachable after model.load() finishes on startup, so by the time the
+  // frontend is running the model is already downloaded.
   const pollSystemStatus = useCallback(() => {
     fetch("/api/system-status")
       .then((r) => r.json())
@@ -91,29 +86,13 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  const downloading = sysStatus?.model_downloading ?? false;
-  const notDownloaded = sysStatus?.model_state === "not_downloaded";
-  const downloadTriggeredRef = useRef(false);
-
   useEffect(() => {
     pollSystemStatus();
-    // Poll every 800 ms while the model is downloading so the progress bar
-    // feels live, otherwise every 2 s to keep traffic low.
-    const interval = downloading ? 800 : 2000;
-    pollRef.current = setInterval(pollSystemStatus, interval);
+    pollRef.current = setInterval(pollSystemStatus, 2000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [pollSystemStatus, downloading]);
-
-  // Kick off the model download automatically on first launch so the user
-  // sees the progress bar immediately without needing to trigger a prediction.
-  useEffect(() => {
-    if (notDownloaded && !downloading && !downloadTriggeredRef.current) {
-      downloadTriggeredRef.current = true;
-      fetch("/api/download-model", { method: "POST" }).catch(() => {});
-    }
-  }, [notDownloaded, downloading]);
+  }, [pollSystemStatus]);
 
   const handleUnload = useCallback(async () => {
     setUnloading(true);
@@ -353,119 +332,6 @@ export default function App() {
           </div>
         </div>
       </header>
-
-      {/* Full-screen model download blocker. The entire UI is locked while
-          the first-run download is in progress. */}
-      <AnimatePresence>
-        {sysStatus?.model_downloading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-              className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-lg w-full mx-4 p-6 space-y-5"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900 flex-shrink-0">
-                  <svg
-                    className="w-6 h-6 text-white animate-bounce"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
-                    Downloading AI model
-                  </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    First-run setup. This only happens once.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-gray-600 dark:text-gray-300">
-                    Fetching GeoCLIP weights from HuggingFace
-                  </span>
-                  <span className="text-sm font-bold tabular-nums text-indigo-600 dark:text-indigo-400">
-                    {sysStatus.download_progress.percent}%
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 animate-progress-glow"
-                    animate={{
-                      width: `${sysStatus.download_progress.percent}%`,
-                    }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                </div>
-                <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 tabular-nums">
-                  <span>
-                    {(
-                      sysStatus.download_progress.bytes /
-                      (1024 * 1024)
-                    ).toFixed(0)}{" "}
-                    MB downloaded
-                  </span>
-                  <span>
-                    ~
-                    {(
-                      sysStatus.download_progress.total_bytes /
-                      (1024 * 1024)
-                    ).toFixed(0)}{" "}
-                    MB total
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
-                <p className="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
-                  <strong className="text-gray-800 dark:text-gray-100">
-                    Why this is locked:
-                  </strong>{" "}
-                  the AI needs its weights before any prediction can run. The
-                  app will unlock automatically as soon as the download
-                  finishes. Depending on your connection this usually takes
-                  between 1 and 5 minutes.
-                </p>
-              </div>
-
-              <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center flex items-center justify-center gap-1.5">
-                <svg
-                  className="w-3 h-3 text-emerald-500 dark:text-emerald-400"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
-                  />
-                </svg>
-                Downloaded directly to your machine · No data is sent anywhere
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         <motion.div

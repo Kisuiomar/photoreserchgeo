@@ -1,4 +1,15 @@
-"""GeoCLIP model. Lazy load on first use, auto-unload after idle timeout."""
+"""GeoCLIP model.
+
+The model is downloaded and loaded synchronously during backend startup
+(see ``load()``). Once started, it stays resident in RAM for the life of
+the process; ``unload()`` is exposed for the "Free RAM" button in the UI.
+
+FUTURE FEATURE: idle auto-unload. The timer plumbing below (``_schedule_unload``,
+``_check_idle``, ``settings.model_idle_timeout``) is retained so the model can
+be automatically evicted after a period of inactivity. We keep it disabled for
+now since the app is typically run on a personal machine where holding the
+weights resident is fine.
+"""
 
 import gc
 import logging
@@ -15,26 +26,15 @@ logger = logging.getLogger(__name__)
 
 _model = None
 _loaded = False
-_downloaded = False  # becomes True once the model files exist on disk
-_downloading = False  # True while the HuggingFace download is in progress
-_download_max_bytes = 0  # monotonically-increasing high-water mark
-_in_use_count = 0  # atomic-ish counter for concurrent inference calls
+_in_use_count = 0  # concurrent inference counter, for future "in use" dot
 _lock = threading.Lock()
 _last_used = 0.0
 _timer: threading.Timer | None = None
 
-# Expected total download size.  GeoCLIP pulls CLIP-ViT-L/14 which includes
-# both the safetensors and pytorch_model.bin formats plus the Xet chunk
-# staging cache, so real-world sizes hover around 3.5 GB on first run.
-_EXPECTED_DOWNLOAD_BYTES = int(3.5 * 1024 * 1024 * 1024)
-
-# Monitor the whole HuggingFace cache (hub/ for finalized blobs + xet/ for
-# in-progress chunk staging used by the new Xet transfer protocol).
 _HF_CACHE_ROOT = os.path.expanduser("~/.cache/huggingface")
 
 
 def _dir_size(path: str) -> int:
-    """Sum of all file sizes under *path*. Returns 0 if the path is missing."""
     if not os.path.isdir(path):
         return 0
     total = 0
@@ -47,56 +47,18 @@ def _dir_size(path: str) -> int:
     return total
 
 
-def is_downloading() -> bool:
-    return _downloading
-
-
-def download_progress() -> dict:
-    """Report approximate download progress for the HF model weights.
-
-    Sizes are measured from the entire HuggingFace cache tree (finalized
-    blobs in ``hub/`` plus in-progress Xet chunks in ``xet/``) and clamped
-    to be monotonically increasing so the bar never ticks backwards.
-    """
-    global _download_max_bytes
-    bytes_on_disk = _dir_size(_HF_CACHE_ROOT)
-    if bytes_on_disk > _download_max_bytes:
-        _download_max_bytes = bytes_on_disk
-    effective = _download_max_bytes
-
-    if is_downloaded():
-        return {
-            "bytes": effective,
-            "total_bytes": max(effective, _EXPECTED_DOWNLOAD_BYTES),
-            "percent": 100,
-            "downloading": False,
-        }
-    percent = min(99, int(effective * 100 / _EXPECTED_DOWNLOAD_BYTES))
-    return {
-        "bytes": effective,
-        "total_bytes": _EXPECTED_DOWNLOAD_BYTES,
-        "percent": percent,
-        "downloading": _downloading,
-    }
-
-
 def is_downloaded() -> bool:
-    """Check whether GeoCLIP weights are cached locally.
+    """Return True when the GeoCLIP + CLIP-L backbone weights are fully cached.
 
-    GeoCLIP ships some weights inside its package directory
-    (``geoclip/model/weights``) but also pulls the backbone CLIP vision
-    encoder from HuggingFace hub on first use.  We consider the model
-    "downloaded" when both the GeoCLIP weights and the HF CLIP snapshot
-    exist on disk.
+    GeoCLIP's own tensors ship with the pip package; the CLIP-L backbone is
+    pulled from HuggingFace on first use and lands in
+    ``~/.cache/huggingface/hub``. We require at least 1 GB so a partial
+    download in progress isn't misreported as complete.
     """
-    global _downloaded
-    if _downloaded:
+    if _loaded:
         return True
 
     have_geoclip_weights = False
-    have_clip_backbone = False
-
-    # 1. GeoCLIP's own weights (ship with the package or in user cache)
     try:
         import geoclip
 
@@ -117,10 +79,6 @@ def is_downloaded() -> bool:
     except Exception:
         pass
 
-    # 2. HuggingFace CLIP backbone snapshot.  Require a substantial size
-    # so a partial download in progress isn't misreported as complete.
-    # The CLIP ViT-L/14 weights are ~1.6 GB; we require at least 1 GB to
-    # avoid false positives but stay tolerant of reasonable file variations.
     _MIN_BACKBONE_BYTES = 1_000_000_000
     hf_candidates = [
         os.path.expanduser(
@@ -130,28 +88,29 @@ def is_downloaded() -> bool:
             "~/.cache/huggingface/hub/models--openai--clip-vit-base-patch32"
         ),
     ]
-    for c in hf_candidates:
-        if os.path.isdir(c) and _dir_size(c) >= _MIN_BACKBONE_BYTES:
-            have_clip_backbone = True
-            break
+    have_clip_backbone = any(
+        os.path.isdir(c) and _dir_size(c) >= _MIN_BACKBONE_BYTES for c in hf_candidates
+    )
 
-    if have_geoclip_weights and have_clip_backbone:
-        _downloaded = True
-        return True
-    return False
+    return have_geoclip_weights and have_clip_backbone
+
+
+def is_loaded() -> bool:
+    return _loaded
 
 
 def is_in_use() -> bool:
     return _in_use_count > 0
 
 
+# ---------------------------------------------------------------------------
+# Lifecycle
+# ---------------------------------------------------------------------------
+
+
 def _schedule_unload() -> None:
-    global _timer
-    if _timer:
-        _timer.cancel()
-    _timer = threading.Timer(settings.model_idle_timeout, _check_idle)
-    _timer.daemon = True
-    _timer.start()
+    # FUTURE FEATURE: idle auto-unload. Disabled: see module docstring.
+    return
 
 
 def _check_idle() -> None:
@@ -163,35 +122,26 @@ def _check_idle() -> None:
 
 
 def _ensure_loaded() -> None:
-    global _model, _loaded, _last_used, _downloading, _downloaded
+    global _model, _loaded, _last_used
     with _lock:
         _last_used = time.time()
         if _loaded and _model is not None:
-            _schedule_unload()
             return
-        needs_download = not is_downloaded()
-        if needs_download:
-            _downloading = True
-            logger.info("Downloading GeoCLIP backbone (first-run, ~1.7 GB)...")
-        else:
-            logger.info("Loading GeoCLIP model into RAM...")
+        logger.info("Loading GeoCLIP model into RAM...")
         try:
             from geoclip import GeoCLIP
 
             _model = GeoCLIP()
             _loaded = True
-            _downloaded = True
             logger.info("GeoCLIP loaded and ready")
-            _schedule_unload()
         except Exception:
             logger.exception("Failed to load GeoCLIP")
             _loaded = False
-        finally:
-            _downloading = False
+            raise
 
 
 def unload() -> None:
-    """Unload model to free RAM."""
+    """Unload model to free RAM. Re-load is blocking on next predict call."""
     global _model, _loaded
     with _lock:
         if not _loaded:
@@ -205,21 +155,31 @@ def unload() -> None:
 
 
 def load() -> None:
-    """Called at startup — lazy, actual load on first predict."""
-    logger.info("GeoCLIP will load on first use (lazy)")
+    """Download + load the model during server startup.
 
-
-def is_loaded() -> bool:
-    return _loaded
+    This call is **synchronous** and **blocking**. HuggingFace's ``tqdm``
+    progress bars write to stderr and appear in the container logs, so the
+    user sees download progress while running ``docker compose up``.
+    Uvicorn does not accept connections until this function returns, so
+    the frontend cannot reach the API until the model is ready.
+    """
+    if _loaded:
+        return
+    print(
+        "[startup] Preparing GeoCLIP model "
+        "(first run will download ~3.5 GB from HuggingFace)...",
+        flush=True,
+    )
+    _ensure_loaded()
+    print("[startup] GeoCLIP model ready.", flush=True)
 
 
 def predict(image_bytes: bytes, top_k: int = 5) -> list[dict]:
-    global _in_use_count, _downloaded
+    global _in_use_count
     _ensure_loaded()
     if _model is None:
         raise RuntimeError("GeoCLIP model failed to load")
 
-    _downloaded = True  # if we got here, weights definitely exist
     _in_use_count += 1
     try:
         with torch.no_grad():

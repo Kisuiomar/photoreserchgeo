@@ -11,6 +11,17 @@ services:
       - ./data:/data
     networks:
       - app
+    # Healthcheck probes /api/health which only responds once uvicorn is
+    # serving, which in turn only happens after the model has been
+    # downloaded + loaded on startup (see model.load).
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'python -c "import urllib.request,sys; urllib.request.urlopen(''http://localhost:8000/api/health'',timeout=3)" || exit 1'
+      interval: 10s
+      timeout: 5s
+      retries: 120 # ~20 min, comfortable for a ~3.5 GB first-run download
+      start_period: 30s
 
   frontend:
     build:
@@ -21,8 +32,11 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    # Frontend only starts after backend is fully ready so users can't
+    # reach the UI while the model is still downloading.
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app
 

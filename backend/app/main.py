@@ -97,10 +97,12 @@ async def health() -> dict:
 async def system_status() -> dict:
     """Return memory usage and model state for the header indicator.
 
-    Three possible model states:
-      * ``not_downloaded``: weights not yet on disk
-      * ``downloaded``: on disk but not loaded in RAM
-      * ``loaded``: in RAM, ready or running inference
+    Model states:
+      * ``downloaded``: on disk but not loaded in RAM (Free RAM was clicked)
+      * ``loaded``: in RAM, ready to answer predictions
+
+    ``not_downloaded`` can't happen here because the backend blocks
+    startup until the weights are on disk (see ``model.load``).
     """
     import os
     import psutil
@@ -111,16 +113,7 @@ async def system_status() -> dict:
 
     loaded = model.is_loaded()
     downloaded = model.is_downloaded() or loaded
-    downloading = model.is_downloading()
-
-    if loaded:
-        state = "loaded"
-    elif downloaded:
-        state = "downloaded"
-    else:
-        state = "not_downloaded"
-
-    progress = model.download_progress()
+    state = "loaded" if loaded else ("downloaded" if downloaded else "not_downloaded")
 
     return {
         "memory_used_gb": round(mem.used / (1024**3), 1),
@@ -130,30 +123,7 @@ async def system_status() -> dict:
         "model_state": state,
         "model_loaded": loaded,
         "model_downloaded": downloaded,
-        "model_downloading": downloading,
-        "download_progress": progress,
     }
-
-
-@app.post("/api/download-model")
-async def download_model() -> dict:
-    """Trigger model download in the background so the frontend can render
-    progress without having to wait on the blocking predict call."""
-    import threading
-
-    if model.is_loaded():
-        return {"status": "already_loaded"}
-    if model.is_downloading():
-        return {"status": "already_downloading"}
-
-    def _bg():
-        try:
-            model._ensure_loaded()  # noqa: SLF001
-        except Exception:
-            logger.exception("Background model download failed")
-
-    threading.Thread(target=_bg, daemon=True).start()
-    return {"status": "started"}
 
 
 @app.post("/api/unload-models")
