@@ -34,6 +34,7 @@ geotest/
 data/sessions/
 data/logs/
 data/snapshots/
+sleuth_rev/
 
 # Test artifacts
 test-results/

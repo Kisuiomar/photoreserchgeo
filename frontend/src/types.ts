@@ -58,6 +58,9 @@ export interface ExactDetails {
   exact_lon: number;
   radius_m: number;
   method: string;
+  is_indoor?: boolean;
+  scene_type?: string;
+  warning?: string | null;
   ocr_osm?: {
     status?: string;
     texts?: string[];

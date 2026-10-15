@@ -306,9 +306,16 @@ function ExactDetailsSection({ details }: { details: ExactDetails }) {
             Exact Spot
           </h4>
         </div>
-        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/80 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-700 flex-shrink-0 tabular-nums">
-          ±{details.radius_m}m
-        </span>
+        <div className="flex items-center gap-1">
+          {details.is_indoor && (
+            <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 uppercase">
+              Indoor
+            </span>
+          )}
+          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/80 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-700 flex-shrink-0 tabular-nums">
+            ±{details.radius_m}m
+          </span>
+        </div>
       </div>
 
       {/* Refinement method */}
@@ -320,6 +327,13 @@ function ExactDetailsSection({ details }: { details: ExactDetails }) {
           {details.method}
         </p>
       </div>
+
+      {/* Indoor Warning or Confidence Notice */}
+      {details.warning && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-2 text-[11px] text-amber-800 dark:text-amber-200 leading-snug">
+          ⚠️ {details.warning}
+        </div>
+      )}
 
       {/* OCR Texts */}
       {hasOcrTexts && (
