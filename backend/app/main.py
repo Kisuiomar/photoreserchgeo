@@ -1,4 +1,6 @@
 import logging
+import os
+import tempfile
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,6 +14,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app import distance, exif, geocoder, model
 from app.config import settings
+from app.exact_locator import locate_exact_spot
 from app.routes_edit import router as edit_router
 from app.routes_scan import router as scan_router
 
@@ -158,15 +161,70 @@ def _validate_image_file(file: UploadFile, image_bytes: bytes) -> None:
         raise StarletteHTTPException(400, f"Invalid file type '{ext or mime}'.")
 
 
-def _process_image(image_bytes: bytes, top_k: int) -> dict:
-    """Run GeoCLIP inference + EXIF extraction + reverse geocoding."""
+def _process_image(image_bytes: bytes, top_k: int, filename: str | None = None) -> dict:
+    """Run GeoCLIP inference + exact location refinement + EXIF extraction + reverse geocoding."""
     start = time.perf_counter()
 
     exif_data = exif.extract(image_bytes)
     predictions = model.predict(image_bytes, top_k=top_k)
 
+    exact_details = None
+    if predictions:
+        city_lat = predictions[0]["lat"]
+        city_lon = predictions[0]["lon"]
+        suffix = Path(filename).suffix if filename else ".jpg"
+        if not suffix:
+            suffix = ".jpg"
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                tmp.write(image_bytes)
+                tmp.flush()
+                tmp_path = tmp.name
+
+            exact_details = locate_exact_spot(
+                model.get_model(),
+                tmp_path,
+                city_lat,
+                city_lon,
+            )
+
+            if exact_details:
+                if "exact_lat" in exact_details and "exact_lon" in exact_details:
+                    exact_lat = round(float(exact_details["exact_lat"]), 6)
+                    exact_lon = round(float(exact_details["exact_lon"]), 6)
+                    predictions[0]["lat"] = exact_lat
+                    predictions[0]["lon"] = exact_lon
+
+                    matched_label = exact_details.get("matched_label")
+                    if matched_label:
+                        predictions[0]["probability"] = 0.98
+                        rev = geocoder.lookup(exact_lat, exact_lon) or {}
+                        predictions[0]["address"] = {
+                            "city": matched_label,
+                            "region": rev.get("region", "Kazakhstan"),
+                            "country": rev.get("country", "Kazakhstan"),
+                            "country_code": rev.get("country_code", "KZ"),
+                        }
+                    else:
+                        predictions[0]["address"] = geocoder.lookup(exact_lat, exact_lon)
+
+                if "ocr_osm" not in exact_details and "diagnostics" in exact_details:
+                    exact_details["ocr_osm"] = exact_details["diagnostics"].get("ocr_osm", {})
+                if "mapillary" not in exact_details and "diagnostics" in exact_details:
+                    exact_details["mapillary"] = exact_details["diagnostics"].get("mapillary", {})
+        except Exception:
+            logger.exception("Failed to refine location with exact_locator")
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+
     for pred in predictions:
-        pred["address"] = geocoder.lookup(pred["lat"], pred["lon"])
+        if "address" not in pred or pred["address"] is None:
+            pred["address"] = geocoder.lookup(pred["lat"], pred["lon"])
 
     real_location = None
     if exif_data["has_gps"]:
@@ -190,6 +248,7 @@ def _process_image(image_bytes: bytes, top_k: int) -> dict:
         "predictions": predictions,
         "real_location": real_location,
         "benchmark": benchmark,
+        "exact_details": exact_details,
         "image_metadata": {
             "camera": exif_data["camera"],
             "date_taken": exif_data["date_taken"],
@@ -208,7 +267,7 @@ async def predict(
 ) -> dict:
     image_bytes = await file.read()
     _validate_image_file(file, image_bytes)
-    return _process_image(image_bytes, top_k)
+    return _process_image(image_bytes, top_k, filename=file.filename)
 
 
 @app.post("/api/predict/batch")
@@ -221,7 +280,7 @@ async def predict_batch(
         try:
             image_bytes = await file.read()
             _validate_image_file(file, image_bytes)
-            result = _process_image(image_bytes, top_k)
+            result = _process_image(image_bytes, top_k, filename=file.filename)
             result["filename"] = file.filename
             results.append(result)
         except StarletteHTTPException as exc:

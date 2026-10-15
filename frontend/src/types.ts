@@ -37,10 +37,64 @@ export interface Benchmark {
   distances: number[];
 }
 
+export interface MatchedPoi {
+  name: string;
+  ocr_text: string;
+  lat: number;
+  lon: number;
+}
+
+export interface MapillaryBestMatch {
+  id: string;
+  lat: number;
+  lon: number;
+  compass_angle?: number;
+  matched_keypoints: number;
+  thumb_url: string;
+}
+
+export interface ExactDetails {
+  exact_lat: number;
+  exact_lon: number;
+  radius_m: number;
+  method: string;
+  ocr_osm?: {
+    status?: string;
+    texts?: string[];
+    matched_pois?: MatchedPoi[];
+    error?: string;
+  };
+  mapillary?: {
+    status?: string;
+    checked?: number;
+    best_match?: MapillaryBestMatch | null;
+    reason?: string;
+    error?: string;
+  };
+  diagnostics?: {
+    initial_city?: { lat: number; lon: number };
+    dense_grid?: Record<string, any>;
+    ocr_osm?: {
+      status?: string;
+      texts?: string[];
+      matched_pois?: MatchedPoi[];
+      error?: string;
+    };
+    mapillary?: {
+      status?: string;
+      checked?: number;
+      best_match?: MapillaryBestMatch | null;
+      reason?: string;
+      error?: string;
+    };
+  };
+}
+
 export interface AnalysisResult {
   predictions: Prediction[];
   real_location: RealLocation | null;
   benchmark: Benchmark | null;
+  exact_details?: ExactDetails | null;
   image_metadata: ImageMetadata;
   processing_time_ms: number;
   filename: string;

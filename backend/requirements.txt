@@ -8,3 +8,5 @@ Pillow
 pycountry
 geopy
 psutil
+requests
+python-dotenv

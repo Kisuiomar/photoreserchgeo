@@ -1,0 +1,10 @@
+﻿.venv/
+venv/
+**/node_modules/
+**/__pycache__/
+*.onnx
+*.pth
+*.bin
+*.pt
+backend/ubinam/
+backend/geo_sleuth/

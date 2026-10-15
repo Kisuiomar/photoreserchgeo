@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { AnalysisResult, Benchmark, Prediction } from "../types";
+import type { AnalysisResult, Benchmark, ExactDetails, Prediction } from "../types";
 import GoogleMapsLink from "./GoogleMapsLink";
 import PredictionMap from "./PredictionMap";
 import PredictionsTable from "./PredictionsTable";
@@ -98,11 +98,10 @@ export default function ResultCard({ result }: Props) {
         </span>
 
         <span
-          className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-            meta.has_gps
+          className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${meta.has_gps
               ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400"
               : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
-          }`}
+            }`}
         >
           <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
             <path
@@ -153,6 +152,11 @@ export default function ResultCard({ result }: Props) {
             </div>
           )}
 
+          {/* Exact spot refinement details */}
+          {result.exact_details && (
+            <ExactDetailsSection details={result.exact_details} />
+          )}
+
           {/* Actual location card */}
           {result.real_location && (
             <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50/50 dark:from-emerald-950/50 dark:to-green-950/30 border border-emerald-100 dark:border-emerald-900 p-3">
@@ -165,12 +169,12 @@ export default function ResultCard({ result }: Props) {
               <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug">
                 {result.real_location.address
                   ? [
-                      result.real_location.address.city,
-                      result.real_location.address.region,
-                      result.real_location.address.country,
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || "Unknown"
+                    result.real_location.address.city,
+                    result.real_location.address.region,
+                    result.real_location.address.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "Unknown"
                   : "Unknown"}
               </p>
               <p className="text-[11px] text-gray-400 font-mono mt-0.5">
@@ -280,3 +284,136 @@ function BenchmarkSection({ benchmark }: { benchmark: Benchmark }) {
     </section>
   );
 }
+
+function ExactDetailsSection({ details }: { details: ExactDetails }) {
+  const ocrOsm = details.ocr_osm || details.diagnostics?.ocr_osm;
+  const mapillary = details.mapillary || details.diagnostics?.mapillary;
+  const bestMatch = mapillary?.best_match;
+
+  const hasOcrTexts = Boolean(ocrOsm?.texts && ocrOsm.texts.length > 0);
+  const hasMatchedPois = Boolean(
+    ocrOsm?.matched_pois && ocrOsm.matched_pois.length > 0,
+  );
+  const hasMapillaryMatch = Boolean(bestMatch?.thumb_url);
+
+  return (
+    <div className="rounded-xl bg-gradient-to-br from-purple-50/80 via-indigo-50/40 to-blue-50/30 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-blue-950/20 border border-purple-200/80 dark:border-purple-900/60 p-3 shadow-sm space-y-2.5">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0 animate-pulse" />
+          <h4 className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider truncate">
+            Exact Spot
+          </h4>
+        </div>
+        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/80 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-700 flex-shrink-0 tabular-nums">
+          ±{details.radius_m}m
+        </span>
+      </div>
+
+      {/* Refinement method */}
+      <div>
+        <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          Method
+        </div>
+        <p className="text-xs font-semibold text-purple-950 dark:text-purple-100 leading-snug mt-0.5">
+          {details.method}
+        </p>
+      </div>
+
+      {/* OCR Texts */}
+      {hasOcrTexts && (
+        <div>
+          <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            Detected Text ({ocrOsm!.texts!.length})
+          </div>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {ocrOsm!.texts!.map((txt, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/80 dark:bg-gray-800/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 max-w-full truncate"
+                title={txt}
+              >
+                {txt}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* OSM Matched POIs */}
+      {hasMatchedPois && (
+        <div>
+          <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            OSM Objects ({ocrOsm!.matched_pois!.length})
+          </div>
+          <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+            {ocrOsm!.matched_pois!.map((poi, idx) => (
+              <div
+                key={idx}
+                className="text-xs bg-white/70 dark:bg-gray-900/70 p-2 rounded-lg border border-purple-100 dark:border-purple-900/40"
+              >
+                <div
+                  className="font-semibold text-gray-800 dark:text-gray-200 truncate"
+                  title={poi.name}
+                >
+                  {poi.name}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                  <span
+                    className="truncate max-w-[120px]"
+                    title={`OCR: "${poi.ocr_text}"`}
+                  >
+                    Match: "{poi.ocr_text}"
+                  </span>
+                  <span className="font-mono flex-shrink-0">
+                    {poi.lat.toFixed(4)}, {poi.lon.toFixed(4)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mapillary StreetView Match Preview */}
+      {hasMapillaryMatch && (
+        <div>
+          <div className="flex items-center justify-between text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            <span>Mapillary Match</span>
+            {bestMatch!.matched_keypoints != null && (
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                {bestMatch!.matched_keypoints} keypoints
+              </span>
+            )}
+          </div>
+          <div className="relative rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 bg-black/10 group">
+            <a
+              href={`https://www.mapillary.com/app/?pKey=${bestMatch!.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open on Mapillary"
+            >
+              <img
+                src={bestMatch!.thumb_url}
+                alt="Mapillary Match Preview"
+                className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                <span className="text-[10px] text-white underline">
+                  Open on Mapillary
+                </span>
+              </div>
+            </a>
+            {bestMatch!.compass_angle != null && (
+              <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1 py-0.5 rounded font-mono">
+                {Math.round(bestMatch!.compass_angle)}°
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

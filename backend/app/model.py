@@ -103,6 +103,12 @@ def is_in_use() -> bool:
     return _in_use_count > 0
 
 
+def get_model():
+    """Return the loaded GeoCLIP instance."""
+    _ensure_loaded()
+    return _model
+
+
 # ---------------------------------------------------------------------------
 # Lifecycle
 # ---------------------------------------------------------------------------
@@ -133,6 +139,13 @@ def _ensure_loaded() -> None:
 
             _model = GeoCLIP()
             _loaded = True
+            try:
+                from app.exact_locator import lock_geoclip_to_kazakhstan
+
+                lock_geoclip_to_kazakhstan(_model)
+                logger.info("GeoCLIP gallery locked to Kazakhstan grid")
+            except Exception:
+                logger.exception("Failed to lock GeoCLIP gallery on load")
             logger.info("GeoCLIP loaded and ready")
         except Exception:
             logger.exception("Failed to load GeoCLIP")
@@ -179,6 +192,13 @@ def predict(image_bytes: bytes, top_k: int = 5) -> list[dict]:
     _ensure_loaded()
     if _model is None:
         raise RuntimeError("GeoCLIP model failed to load")
+
+    try:
+        from app.exact_locator import lock_geoclip_to_kazakhstan
+
+        lock_geoclip_to_kazakhstan(_model)
+    except Exception:
+        pass
 
     _in_use_count += 1
     try:

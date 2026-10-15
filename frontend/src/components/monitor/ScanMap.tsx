@@ -10,10 +10,9 @@ import L from "leaflet";
 
 import type { GpsImage } from "../../types";
 
-const TILES =
-  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+const TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTR =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 function FitAll({ points }: { points: L.LatLngTuple[] }) {
   const map = useMap();
@@ -55,7 +54,7 @@ export default function ScanMap({ gpsImages }: Props) {
         style={{ height: 360, background: "#f0f0f0" }}
         scrollWheelZoom={true}
       >
-        <TileLayer url={TILES} attribution={ATTR} />
+        <TileLayer url={TILES} attribution={ATTR} maxZoom={19} />
         <FitAll points={points} />
 
         {gpsImages.map((g) => {
