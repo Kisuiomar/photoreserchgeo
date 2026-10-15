@@ -53,6 +53,14 @@ export interface MapillaryBestMatch {
   thumb_url: string;
 }
 
+export interface StreetViewMatch {
+  id: string;
+  lat: number;
+  lon: number;
+  thumb_url?: string;
+  compass_angle?: number;
+}
+
 export interface ExactDetails {
   exact_lat: number;
   exact_lon: number;
@@ -61,6 +69,7 @@ export interface ExactDetails {
   is_indoor?: boolean;
   scene_type?: string;
   warning?: string | null;
+  street_view_matches?: StreetViewMatch[];
   ocr_osm?: {
     status?: string;
     texts?: string[];

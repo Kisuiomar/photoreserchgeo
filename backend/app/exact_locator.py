@@ -60,6 +60,92 @@ INDOOR_OCR_STOPWORDS = {
     "осторожно", "внимание", "намазхана", "намаз", "smoking", "курение"
 }
 
+# Казахстанские телефонные коды фиксированной связи
+KZ_PHONE_CODES = {
+    "727": ("Almaty", 43.2389, 76.8897),
+    "7172": ("Astana", 51.1694, 71.4491),
+    "7252": ("Shymkent", 42.3417, 69.5901),
+    "7212": ("Karaganda", 49.8047, 73.1094),
+    "7162": ("Kokshetau / Burabay", 53.0837, 70.2709),
+    "7292": ("Aktau", 43.6532, 51.1691),
+    "7232": ("Ust-Kamenogorsk", 49.9483, 82.6285),
+    "7222": ("Semey", 50.4111, 80.2275),
+    "7182": ("Pavlodar", 52.2873, 76.9674),
+    "7112": ("Uralsk", 51.2333, 51.3667),
+    "7132": ("Aktobe", 50.2839, 57.1670),
+    "7282": ("Taldykorgan", 45.0156, 78.3739),
+    "7262": ("Taraz", 42.9000, 71.3667),
+    "7242": ("Kyzylorda", 44.8488, 65.4823),
+    "7142": ("Kostanay", 53.2144, 63.6246),
+    "7152": ("Petropavlovsk", 54.8728, 69.1430),
+    "7122": ("Atyrau", 47.0945, 51.9238),
+    "73522": ("Zhezkazgan", 47.7833, 67.7667),
+}
+
+# Регионы автомобильных номеров РК
+KZ_PLATE_REGIONS = {
+    "01": ("Astana", 51.1694, 71.4491),
+    "02": ("Almaty", 43.2389, 76.8897),
+    "03": ("Akmola (Kokshetau)", 53.2833, 69.3833),
+    "04": ("Aktobe", 50.2839, 57.1670),
+    "05": ("Almaty Region", 43.8667, 77.0833),
+    "06": ("Atyrau", 47.0945, 51.9238),
+    "07": ("West Kazakhstan (Uralsk)", 51.2333, 51.3667),
+    "08": ("Zhambyl (Taraz)", 42.9000, 71.3667),
+    "09": ("Karaganda", 49.8047, 73.1094),
+    "10": ("Kostanay", 53.2144, 63.6246),
+    "11": ("Kyzylorda", 44.8488, 65.4823),
+    "12": ("Mangystau (Aktau)", 43.6532, 51.1691),
+    "13": ("Turkestan", 43.2973, 68.2517),
+    "14": ("Pavlodar", 52.2873, 76.9674),
+    "15": ("North Kazakhstan (Petropavlovsk)", 54.8728, 69.1430),
+    "16": ("East Kazakhstan (Ust-Kamenogorsk)", 49.9483, 82.6285),
+    "17": ("Shymkent", 42.3417, 69.5901),
+    "18": ("Abay (Semey)", 50.4111, 80.2275),
+    "19": ("Zhetysu (Taldykorgan)", 45.0156, 78.3739),
+    "20": ("Ulytau (Zhezkazgan)", 47.7833, 67.7667),
+}
+
+# Почтовые индексы РК (старые 6-значные префиксы)
+KZ_POSTAL_PREFIXES = {
+    "01": ("Astana", 51.1694, 71.4491),
+    "02": ("Almaty Region", 43.3000, 76.9000),
+    "03": ("Aktobe", 50.2839, 57.1670),
+    "04": ("Taldykorgan", 45.0156, 78.3739),
+    "05": ("Almaty", 43.2389, 76.8897),
+    "06": ("Atyrau", 47.0945, 51.9238),
+    "07": ("Ust-Kamenogorsk", 49.9483, 82.6285),
+    "08": ("Taraz", 42.9000, 71.3667),
+    "09": ("Uralsk", 51.2333, 51.3667),
+    "10": ("Karaganda", 49.8047, 73.1094),
+    "11": ("Kostanay", 53.2144, 63.6246),
+    "12": ("Kyzylorda", 44.8488, 65.4823),
+    "13": ("Aktau", 43.6532, 51.1691),
+    "14": ("Pavlodar", 52.2873, 76.9674),
+    "15": ("Petropavlovsk", 54.8728, 69.1430),
+    "16": ("Shymkent", 42.3417, 69.5901),
+}
+
+# Новые буквенные префиксы Казпочты (7 символов, например A05B2Y3)
+KAZPOST_NEW_LETTERS = {
+    "A": ("Almaty", 43.2389, 76.8897),
+    "Z": ("Astana", 51.1694, 71.4491),
+    "B": ("Almaty Region", 43.8667, 77.0833),
+    "C": ("Akmola (Kokshetau)", 53.2833, 69.3833),
+    "D": ("Aktobe", 50.2839, 57.1670),
+    "E": ("Atyrau", 47.0945, 51.9238),
+    "F": ("East Kazakhstan", 49.9483, 82.6285),
+    "H": ("Zhambyl (Taraz)", 42.9000, 71.3667),
+    "L": ("West Kazakhstan (Uralsk)", 51.2333, 51.3667),
+    "M": ("Karaganda", 49.8047, 73.1094),
+    "P": ("Kostanay", 53.2144, 63.6246),
+    "N": ("Kyzylorda", 44.8488, 65.4823),
+    "R": ("Mangystau (Aktau)", 43.6532, 51.1691),
+    "S": ("Pavlodar", 52.2873, 76.9674),
+    "T": ("North Kazakhstan", 54.8728, 69.1430),
+    "X": ("Turkestan / Shymkent", 42.3417, 69.5901),
+}
+
 # Опорная сетка городов, городских парков и природных зон Казахстана
 KZ_HUBS = [
     ("Almaty, First President Park", 43.1903, 76.8858, 3000, 40),
@@ -140,42 +226,321 @@ def enrich_geoclip_gallery(geoclip_model):
 
 def detect_indoor_cv(image_path: str) -> Dict[str, Any]:
     """
-    Локальная эвристика OpenCV для определения фото внутри здания:
-    проверяет отсутствие открытого неба в верхней части кадра и распределение освещения.
+    Локальная эвристика OpenCV для определения фото внутри здания с защитой ночных уличных фото:
+    1. Анализ открытого неба в верхней трети кадра (sky_ratio).
+    2. Анализ ночного неба: низкая средняя яркость V < 50, низкая плотность граней Canny (в отличие от потолка с лампами/плитками).
+    3. При ночной уличной съемке не блокирует уличную привязку.
     """
     if cv2 is None:
-        return {"is_indoor_heuristic": False, "indoor_prob": 0.0, "sky_ratio": 0.0}
+        return {"is_indoor_heuristic": False, "indoor_prob": 0.0, "sky_ratio": 0.0, "is_night_outdoor": False}
     try:
         img = cv2.imread(image_path)
         if img is None:
-            return {"is_indoor_heuristic": False, "indoor_prob": 0.0, "sky_ratio": 0.0}
+            return {"is_indoor_heuristic": False, "indoor_prob": 0.0, "sky_ratio": 0.0, "is_night_outdoor": False}
 
         h, w, _ = img.shape
         top_crop = img[0:max(1, int(h * 0.3)), :]
         hsv_top = cv2.cvtColor(top_crop, cv2.COLOR_BGR2HSV)
 
-        # Доля пикселей, похожих на дневное голубое или яркое дневное облачное небо
-        sky_mask_blue = cv2.inRange(hsv_top, (90, 30, 120), (135, 255, 255))
-        sky_mask_bright = cv2.inRange(hsv_top, (0, 0, 215), (180, 40, 255))
-        sky_ratio = float(np.count_nonzero(sky_mask_blue | sky_mask_bright)) / float(top_crop.shape[0] * top_crop.shape[1])
+        gray_top = cv2.cvtColor(top_crop, cv2.COLOR_BGR2GRAY)
+        canny_top = cv2.Canny(gray_top, 50, 150)
+        edge_density_top = float(np.count_nonzero(canny_top)) / float(gray_top.size)
 
-        indoor_prob = 0.75 if sky_ratio < 0.03 else (0.45 if sky_ratio < 0.10 else 0.15)
+        v_channel = hsv_top[:, :, 2]
+        mean_v_top = float(np.mean(v_channel))
+
+        # 1. Дневное небо (голубое или яркое дневное облачное)
+        # Если в верхней трети высокая плотность граней Canny (> 0.035), это потолок/конструкции, а не открытое небо!
+        sky_mask_blue = cv2.inRange(hsv_top, (90, 30, 120), (135, 255, 255))
+        if edge_density_top > 0.035:
+            sky_ratio = float(np.count_nonzero(sky_mask_blue)) / float(top_crop.shape[0] * top_crop.shape[1])
+        else:
+            sky_mask_bright = cv2.inRange(hsv_top, (0, 0, 215), (180, 40, 255))
+            sky_ratio = float(np.count_nonzero(sky_mask_blue | sky_mask_bright)) / float(top_crop.shape[0] * top_crop.shape[1])
+
+        is_night_outdoor = False
+        if sky_ratio < 0.03 and mean_v_top < 50 and edge_density_top < 0.035:
+            # Ночное небо над головой гладкое и темное (не текстурированный потолок с лампами)
+            is_night_outdoor = True
+
+        if sky_ratio >= 0.04:
+            indoor_prob = 0.15
+        elif is_night_outdoor:
+            indoor_prob = 0.20
+        elif sky_ratio < 0.03:
+            indoor_prob = 0.75
+        else:
+            indoor_prob = 0.45
+
         return {
-            "is_indoor_heuristic": indoor_prob >= 0.6,
+            "is_indoor_heuristic": (indoor_prob >= 0.6) and not is_night_outdoor,
             "indoor_prob": round(indoor_prob, 2),
-            "sky_ratio": round(sky_ratio, 4)
+            "sky_ratio": round(sky_ratio, 4),
+            "is_night_outdoor": is_night_outdoor,
+            "top_mean_v": round(mean_v_top, 1),
+            "top_edge_density": round(edge_density_top, 4),
         }
     except Exception:
-        return {"is_indoor_heuristic": False, "indoor_prob": 0.0, "sky_ratio": 0.0}
+        return {"is_indoor_heuristic": False, "indoor_prob": 0.0, "sky_ratio": 0.0, "is_night_outdoor": False}
+
+
+def normalize_kz_address_query(text: str) -> str:
+    """Нормализует казахские адресные маркеры перед отправкой в OSM."""
+    t = text
+    t = re.sub(r"(?i)\b(шағын\s*ауданы?|ш\/а|мкрн?|м-н)\b", "мкр.", t)
+    t = re.sub(r"(?i)\b(көшесі|к-сі)\b", "улица", t)
+    t = re.sub(r"(?i)\b(даңғылы|даңғ\.?)\b", "проспект", t)
+    return t.strip()
+
+
+def extract_kz_metadata_clues(texts: List[str]) -> Dict[str, Any]:
+    """
+    Ищет казахстанские микро-признаки: почтовые индексы, городские коды телефонов,
+    автомобильные номера регионов и БИН/ИИН для точной географической привязки.
+    """
+    clues = {
+        "postal_code": None,
+        "phone_code": None,
+        "plate_region": None,
+        "bin": None,
+        "inferred_city": None,
+        "anchor_lat": None,
+        "anchor_lon": None,
+        "confidence": 0.0,
+        "matched_clues": []
+    }
+    if not texts:
+        return clues
+
+    joined = " ".join([str(t) for t in texts])
+
+    # 1. Почтовые индексы (старый 6-значный 010000..169999)
+    m_post_old = re.search(r"\b(0[1-9]|1[0-6])\d{4}\b", joined)
+    if m_post_old:
+        code = m_post_old.group(0)
+        prefix = code[:2]
+        if prefix in KZ_POSTAL_PREFIXES:
+            city_name, lat, lon = KZ_POSTAL_PREFIXES[prefix]
+            clues["postal_code"] = code
+            clues["inferred_city"] = city_name
+            clues["anchor_lat"] = lat
+            clues["anchor_lon"] = lon
+            clues["confidence"] = 0.90
+            clues["matched_clues"].append(f"Postal Code {code} -> {city_name}")
+
+    # Новый 7-значный индекс Казпочты (например, A05B2Y3)
+    if not clues["postal_code"]:
+        m_post_new = re.search(r"\b([A-Z])\d{2}[A-Z0-9]{4}\b", joined)
+        if m_post_new:
+            code = m_post_new.group(0)
+            first_letter = code[0]
+            if first_letter in KAZPOST_NEW_LETTERS:
+                city_name, lat, lon = KAZPOST_NEW_LETTERS[first_letter]
+                clues["postal_code"] = code
+                clues["inferred_city"] = city_name
+                clues["anchor_lat"] = lat
+                clues["anchor_lon"] = lon
+                clues["confidence"] = 0.88
+                clues["matched_clues"].append(f"Kazpost {code} -> {city_name}")
+
+    # 2. Телефонные коды городов (+7 727, (7172), 8(7252))
+    for code, (city_name, lat, lon) in KZ_PHONE_CODES.items():
+        pattern = rf"(?:\+7|8)[\s\-\(]*{code}[\s\-\)]*\d+"
+        if re.search(pattern, joined):
+            clues["phone_code"] = code
+            if not clues["inferred_city"]:
+                clues["inferred_city"] = city_name
+                clues["anchor_lat"] = lat
+                clues["anchor_lon"] = lon
+                clues["confidence"] = 0.85
+            clues["matched_clues"].append(f"Phone Code {code} -> {city_name}")
+            break
+
+    # 3. Автомобильные номера РК (123 ABC 02 или 02 | 123 ABC)
+    plate_match = re.search(r"\b\d{3}\s?[A-Z]{2,3}\s?(0[1-9]|1[0-9]|20)\b", joined) or \
+                  re.search(r"\b(0[1-9]|1[0-9]|20)\s?\|\s?\d{3}\s?[A-Z]{2,3}\b", joined)
+    if plate_match:
+        reg = plate_match.group(1)
+        if reg in KZ_PLATE_REGIONS:
+            city_name, lat, lon = KZ_PLATE_REGIONS[reg]
+            clues["plate_region"] = reg
+            if not clues["inferred_city"]:
+                clues["inferred_city"] = city_name
+                clues["anchor_lat"] = lat
+                clues["anchor_lon"] = lon
+                clues["confidence"] = 0.80
+            clues["matched_clues"].append(f"License Plate Region {reg} -> {city_name}")
+
+    # 4. БИН / ИИН (12 цифр)
+    bin_match = re.search(r"\b(БИН|ИИН|BIN|IIN)[:\s]*([0-9]{12})\b", joined, re.IGNORECASE)
+    if bin_match:
+        clues["bin"] = bin_match.group(2)
+        clues["matched_clues"].append(f"Kazakh Fiscal BIN: {clues['bin']}")
+
+    return clues
+
+
+def search_overpass_brand_cluster(
+    brands: List[str],
+    city_lat: float,
+    city_lon: float,
+    radius_m: int = 15000
+) -> Optional[Dict[str, Any]]:
+    """
+    Ищет пространственное пересечение брендов/магазинов (co-occurrence) внутри одного ТРЦ/БЦ.
+    Если >= 2 брендов из разных категорий находятся в радиусе 150м друг от друга — сужает координаты до 35м.
+    """
+    clean_brands = []
+    seen = set()
+    for b in brands:
+        cb = re.sub(r"[^\w\s\-\.]", "", str(b)).strip()
+        low = cb.lower()
+        if len(cb) >= 3 and low not in INDOOR_OCR_STOPWORDS and low not in seen:
+            seen.add(low)
+            clean_brands.append(cb)
+
+    if len(clean_brands) < 2:
+        return None
+
+    escaped = [re.escape(b) for b in clean_brands[:8]]
+    brand_regex = "|".join(escaped)
+
+    overpass_query = f"""
+    [out:json][timeout:10];
+    (
+      node["name"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      way["name"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      node["brand"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      way["brand"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      node["shop"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      way["shop"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+    );
+    out center tags 30;
+    """
+
+    headers = {"User-Agent": "PhotoResearchGeoKZ/3.2 (brand-clustering)"}
+    try:
+        r = requests.post("https://overpass-api.de/api/interpreter", data={"data": overpass_query}, headers=headers, timeout=10)
+        if not r.ok:
+            return None
+        elements = r.json().get("elements", [])
+        if len(elements) < 2:
+            return None
+
+        points = []
+        for el in elements:
+            lat = el.get("lat") or el.get("center", {}).get("lat")
+            lon = el.get("lon") or el.get("center", {}).get("lon")
+            if lat is None or lon is None:
+                continue
+            tags = el.get("tags", {})
+            name = tags.get("name") or tags.get("brand") or tags.get("operator") or ""
+            matched_brand = None
+            for cb in clean_brands:
+                if cb.lower() in name.lower() or cb.lower() in tags.get("brand", "").lower():
+                    matched_brand = cb
+                    break
+            if not matched_brand:
+                matched_brand = name
+
+            points.append({
+                "lat": float(lat),
+                "lon": float(lon),
+                "brand": matched_brand,
+                "name": name,
+                "building": tags.get("building") or tags.get("mall") or tags.get("amenity")
+            })
+
+        def haversine_m(lat1, lon1, lat2, lon2):
+            dlat = math.radians(lat2 - lat1)
+            dlon = math.radians(lon2 - lon1)
+            a = math.sin(dlat / 2.0)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2.0)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            return 6371000 * c
+
+        best_cluster = None
+        min_cluster_dist = 999999
+
+        for i in range(len(points)):
+            for j in range(i + 1, len(points)):
+                p1, p2 = points[i], points[j]
+                if p1["brand"].lower() == p2["brand"].lower():
+                    continue
+                dist = haversine_m(p1["lat"], p1["lon"], p2["lat"], p2["lon"])
+                if dist <= 150:
+                    if dist < min_cluster_dist:
+                        min_cluster_dist = dist
+                        best_cluster = (p1, p2, dist)
+
+        if best_cluster:
+            p1, p2, dist = best_cluster
+            cl_lat = (p1["lat"] + p2["lat"]) / 2.0
+            cl_lon = (p1["lon"] + p2["lon"]) / 2.0
+            brand_label = f"ТРЦ / Торговый кластер ({p1['brand']} + {p2['brand']})"
+            return {
+                "lat": round(cl_lat, 6),
+                "lon": round(cl_lon, 6),
+                "radius_m": 35,
+                "name": brand_label,
+                "matched_brands": [p1["brand"], p2["brand"]],
+                "distance_m": round(dist, 1),
+                "method": "Indoor Brand Cluster (Overpass)"
+            }
+    except Exception:
+        pass
+    return None
+
+
+def fetch_mapillary_street_view(lat: float, lon: float, radius_m: int = 50, limit: int = 3) -> List[Dict[str, Any]]:
+    """
+    Запрашивает ближайшие снимки Street View из Mapillary Graph API для визуального подтверждения точки.
+    """
+    token = os.getenv("MAPILLARY_TOKEN") or os.getenv("MAPILLARY_ACCESS_TOKEN", "")
+    token = token.strip().strip('"').strip("'")
+    if not token:
+        return []
+
+    url = "https://graph.mapillary.com/images"
+    # Mapillary Graph API поддерживает closeto={lon},{lat}
+    params = {
+        "fields": "id,computed_geometry,thumb_1024_url,compass_angle",
+        "closeto": f"{lon},{lat}",
+        "limit": limit,
+    }
+    headers = {"Authorization": f"OAuth {token}"}
+    try:
+        r = requests.get(url, params=params, headers=headers, timeout=5)
+        if not r.ok:
+            # Альтернативный вызов с query param
+            params["access_token"] = token
+            r = requests.get(url, params=params, timeout=5)
+
+        if r.ok:
+            data = r.json().get("data", [])
+            matches = []
+            for item in data:
+                geom = item.get("computed_geometry", {}).get("coordinates", [])
+                matches.append({
+                    "id": item.get("id"),
+                    "lon": geom[0] if len(geom) > 0 else lon,
+                    "lat": geom[1] if len(geom) > 1 else lat,
+                    "thumb_url": item.get("thumb_1024_url"),
+                    "compass_angle": item.get("compass_angle"),
+                })
+            return matches
+    except Exception:
+        pass
+    return []
 
 
 def analyze_with_gemini_vision(image_path: str) -> Dict[str, Any]:
     """
     Использует GEMINI_API_KEY для:
     1) Распознавания типа сцены (is_indoor vs outdoor).
-    2) Определения известных интерьеров (ТРЦ, аэропорты, станции, кафе) или природных объектов/улиц.
-    3) Защиты от угадывания случайных координат на типовых интерьерах (ставит lat/lon в null).
-    4) Извлечения поисковых запросов и вывесок для OpenStreetMap.
+    2) Window View анализа: силуэт гор Заилийского Алатау, Байтерек, Есентай, Хан Шатыр, солнце.
+    3) Определения известных интерьеров (ТРЦ, аэропорты, станции, кафе).
+    4) Защиты от угадывания случайных координат на типовых интерьерах (ставит lat/lon в null).
+    5) Извлечения поисковых запросов и брендов для OpenStreetMap.
     """
     api_key = os.getenv("GEMINI_API_KEY", "").strip().strip('"').strip("'")
     if not api_key:
@@ -205,15 +570,19 @@ def analyze_with_gemini_vision(image_path: str) -> Dict[str, Any]:
             "First, determine if the photo is taken INDOORS (inside a building, mall, cafe, office, room, station, airport) or OUTDOORS (street, park, nature, facade). "
             "If INDOORS: "
             "1. Inspect mall atrium architecture (e.g. MEGA Alma-Ata, MEGA Silk Way, Dostyk Plaza, Khan Shatyr, Esentai Mall, Forum), "
-            "storefront brand names, posters, signs, or views out the windows. "
-            "2. DO NOT guess random coordinates if the room is generic or unidentifiable — set lat and lon to null if confidence is below 0.65. "
+            "storefront brand names, posters, signs, or receipts. "
+            "2. WINDOW VIEW ANALYSIS: If windows or balconies are visible, carefully inspect the view outside: "
+            "mountains (Zailiyskiy Alatau south of Almaty, Burabay granite rocks, flat steppe of Astana), "
+            "prominent towers (Esentai Tower, Almaty Towers, KazZhol, Abu Dhabi Plaza, Khan Shatyr, Baiterek, Kok-Tobe TV Tower). "
+            "3. DO NOT guess random coordinates if the room is generic or unidentifiable — set lat and lon to null if confidence is below 0.65. "
             "If OUTDOORS: "
             "Identify the exact landmark, park, street, building, or nature spot. "
             "Return ONLY valid JSON matching this schema: "
             "{\"is_indoor\": true/false, \"scene_type\": \"mall|cafe|office|residential|station|airport|street|park|nature\", "
             "\"confidence\": 0.85, \"place_name\": \"exact name or null\", \"city\": \"city or null\", \"country\": \"Kazakhstan\", "
             "\"osm_search_query\": \"search query for OpenStreetMap\", \"lat\": 51.1694_or_null, \"lon\": 71.4491_or_null, "
-            "\"radius_m\": 30, \"search_queries\": [\"identifiable brand, mall or street\"], \"detected_text\": [\"visible text\"]}"
+            "\"radius_m\": 30, \"search_queries\": [\"identifiable brand, mall, landmark or window view\"], \"detected_text\": [\"visible text\"], "
+            "\"window_view\": {\"has_window_view\": true/false, \"window_landmarks\": [\"landmark name\"], \"azimuth_deg\": 180, \"notes\": \"description\"}}"
         )
         payload = {
             "contents": [{
@@ -286,10 +655,8 @@ def extract_text_from_photo(image_path: str, is_indoor: bool = False) -> List[st
                 txt = re.sub(r"\s+", " ", txt).strip()
                 low = txt.lower()
                 if len(txt) >= 3 and low not in seen:
-                    # Фильтруем стоп-слова интерьеров
                     if low in INDOOR_OCR_STOPWORDS:
                         continue
-                    # Если помещение, игнорируем слишком короткие слова без адресных маркеров
                     if is_indoor and len(txt) < 4:
                         if not any(token in low for token in ["пр", "ул", "к-сі", "д.", "мкр"]):
                             continue
@@ -334,10 +701,11 @@ def geocode_in_kazakhstan(
     city_lon: Optional[float] = None
 ) -> Optional[Dict[str, Any]]:
     """Ищет адрес, название объекта или ТРЦ по карте Казахстана (Nominatim + Overpass API)."""
-    headers = {"User-Agent": "GeoSleuthKZ/3.1 (indoor-protected)"}
+    headers = {"User-Agent": "GeoSleuthKZ/3.2 (indoor-protected)"}
     queries: List[str] = []
     for c in candidates:
         clean = re.sub(r"[^\w\s\-\.,№/а-яА-ЯёЁәіңғүұқөһӘІҢҒҮҰҚӨҺ]", " ", str(c)).strip()
+        clean = normalize_kz_address_query(clean)
         low = clean.lower()
         if len(clean) >= 3 and low not in INDOOR_OCR_STOPWORDS:
             if is_indoor and len(clean) < 4:
@@ -458,7 +826,6 @@ def refine_dense_grid(
             idx = int(torch.argmax(scores).item())
             best_score = float(scores[idx].item())
 
-            # Защита от галлюцинаций GeoCLIP на интерьерах или неинформативных кадрах
             if best_score < 0.21:
                 return {
                     "status": "low_visual_confidence",
@@ -482,27 +849,95 @@ def refine_dense_grid(
 
 def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon: float) -> Dict[str, Any]:
     """
-    Главный конвейер геолокации с защитой от ошибок на интерьерах:
-    1. Проверка интерьера через OpenCV (отсутствие неба / дневного света).
-    2. Анализ через Gemini Vision: определение is_indoor, атриумов ТРЦ, вокзалов, брендов или природных зон.
-    3. Локальный OCR (EasyOCR) с фильтрацией интерьерных стоп-слов ('касса', 'выход' и др.) -> поиск в OSM.
-    4. Geo-Sleuth (обратный поиск по фото в интернете).
-    5. Защита от ошибок GeoCLIP на интерьерах (отключение 25-метрового радиуса).
+    Главный конвейер геолокации с поддержкой 5 глубоких модулей:
+    1. OpenCV эвристика интерьера с защитой ночных уличных фото (detect_indoor_cv).
+    2. Gemini Vision v3.2 (детекция indoor/outdoor, окно/панорама гор, вывески, бренды).
+    3. Парсер казахстанских микро-признаков (индексы, телефонные коды, номера авто).
+    4. Пространственное пересечение брендов (Overpass API Brand Cluster -> точность 35м).
+    5. Верификация через Mapillary Street-View (при radius_m <= 150).
     """
     lock_geoclip_to_kazakhstan(geoclip_model)
 
-    # 0. Локальная эвристика интерьера
+    # 0. Локальная эвристика интерьера с защитой ночной улицы
     cv_indoor = detect_indoor_cv(image_path)
     is_indoor = cv_indoor.get("is_indoor_heuristic", False)
+    is_night_outdoor = cv_indoor.get("is_night_outdoor", False)
 
-    # 1. Gemini Vision (определение места, чтения вывесок, проверка indoor/outdoor)
+    # 1. Gemini Vision v3.2 (определение места, вывесок, окна, проверка indoor/outdoor)
     vlm = analyze_with_gemini_vision(image_path)
     vlm_data = vlm.get("data", {}) if isinstance(vlm.get("data"), dict) else {}
 
     if vlm_data.get("is_indoor") is not None:
-        is_indoor = bool(vlm_data.get("is_indoor"))
+        # Если CV детектировал ночную улицу с высокой уверенностью, не даем ошибочно сделать indoor
+        if is_night_outdoor and not vlm_data.get("is_indoor"):
+            is_indoor = False
+        else:
+            is_indoor = bool(vlm_data.get("is_indoor"))
 
-    # Если Gemini Vision с высокой уверенностью определил место (включая конкретные ТРЦ или достопримечательности)
+    # Извлекаем OCR текст заранее для анализа микро-признаков и брендов
+    ocr_texts = extract_text_from_photo(image_path, is_indoor=is_indoor)
+    all_texts = ocr_texts + vlm_data.get("detected_text", [])
+
+    # 2. Парсер казахстанских микро-признаков (индексы, автономера, коды телефонов)
+    kz_clues = extract_kz_metadata_clues(all_texts)
+    if kz_clues.get("anchor_lat") and kz_clues.get("anchor_lon"):
+        # Если город был не определен или за пределами Казахстана, привязываем к распознанному региону
+        if not (40.0 <= city_lat <= 56.0 and 46.0 <= city_lon <= 88.0) or kz_clues.get("confidence", 0) >= 0.85:
+            city_lat = kz_clues["anchor_lat"]
+            city_lon = kz_clues["anchor_lon"]
+
+    # 3. Window View Analysis: если из окна видны горы или знаковые высотки
+    window_view = vlm_data.get("window_view", {})
+    if window_view.get("has_window_view") and window_view.get("window_landmarks"):
+        window_queries = [str(lm) for lm in window_view["window_landmarks"] if lm]
+        win_hit = geocode_in_kazakhstan(window_queries, is_indoor=False, city_lat=city_lat, city_lon=city_lon)
+        if win_hit:
+            street_views = fetch_mapillary_street_view(win_hit["lat"], win_hit["lon"])
+            return {
+                "exact_lat": win_hit["lat"],
+                "exact_lon": win_hit["lon"],
+                "radius_m": 75,
+                "is_indoor": is_indoor,
+                "matched_label": f"Вид из окна на {win_hit['name']}",
+                "method": f"Window View Landmark: «{win_hit['matched_query']}»",
+                "street_view_matches": street_views,
+                "diagnostics": {
+                    "gemini_vision": vlm_data,
+                    "window_view": window_view,
+                    "osm_refined": win_hit,
+                    "kz_clues": kz_clues,
+                    "cv_indoor": cv_indoor
+                }
+            }
+
+    # 4. Пространственное пересечение брендов (Overpass API Brand Cluster -> 35м)
+    if is_indoor:
+        brand_candidates = []
+        for b in vlm_data.get("search_queries", []) + ocr_texts + vlm_data.get("detected_text", []):
+            if b and str(b).lower() not in INDOOR_OCR_STOPWORDS:
+                brand_candidates.append(str(b))
+
+        brand_cluster = search_overpass_brand_cluster(brand_candidates, city_lat, city_lon, radius_m=12000)
+        if brand_cluster:
+            street_views = fetch_mapillary_street_view(brand_cluster["lat"], brand_cluster["lon"])
+            return {
+                "exact_lat": brand_cluster["lat"],
+                "exact_lon": brand_cluster["lon"],
+                "radius_m": brand_cluster["radius_m"],
+                "is_indoor": True,
+                "scene_type": vlm_data.get("scene_type", "mall"),
+                "matched_label": brand_cluster["name"],
+                "method": brand_cluster["method"],
+                "street_view_matches": street_views,
+                "diagnostics": {
+                    "brand_cluster": brand_cluster,
+                    "gemini_vision": vlm_data,
+                    "kz_clues": kz_clues,
+                    "cv_indoor": cv_indoor
+                }
+            }
+
+    # 5. Прямой результат Gemini Vision с высокой уверенностью
     if vlm.get("status") == "ok" and vlm_data.get("lat") and vlm_data.get("lon"):
         v_lat, v_lon = float(vlm_data["lat"]), float(vlm_data["lon"])
         osm_q = [
@@ -517,6 +952,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
 
         label = f"{vlm_data.get('place_name', '')}, {vlm_data.get('city', 'Kazakhstan')}".strip(", ")
         rad = int(vlm_data.get("radius_m", 50 if is_indoor else 15))
+        street_views = fetch_mapillary_street_view(v_lat, v_lon) if rad <= 150 else []
         return {
             "exact_lat": v_lat,
             "exact_lon": v_lon,
@@ -525,10 +961,16 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             "scene_type": vlm_data.get("scene_type", "indoor" if is_indoor else "outdoor"),
             "matched_label": label,
             "method": f"Gemini Vision + OSM: {label}",
-            "diagnostics": {"gemini_vision": vlm_data, "osm_refined": osm_hit, "cv_indoor": cv_indoor}
+            "street_view_matches": street_views,
+            "diagnostics": {
+                "gemini_vision": vlm_data,
+                "osm_refined": osm_hit,
+                "kz_clues": kz_clues,
+                "cv_indoor": cv_indoor
+            }
         }
 
-    # Если это интерьер ТРЦ/аэропорта/станции без прямых координат, но есть поисковые запросы (бренды, имя молла)
+    # 6. Поиск известных ТРЦ/аэропортов/станций по названиям брендов
     if is_indoor and vlm_data.get("search_queries"):
         indoor_osm_hit = geocode_in_kazakhstan(
             vlm_data.get("search_queries"),
@@ -537,6 +979,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             city_lon=city_lon
         )
         if indoor_osm_hit:
+            street_views = fetch_mapillary_street_view(indoor_osm_hit["lat"], indoor_osm_hit["lon"])
             return {
                 "exact_lat": indoor_osm_hit["lat"],
                 "exact_lon": indoor_osm_hit["lon"],
@@ -545,13 +988,19 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
                 "scene_type": vlm_data.get("scene_type", "indoor"),
                 "matched_label": indoor_osm_hit["name"],
                 "method": f"Indoor Landmark Search: «{indoor_osm_hit['matched_query']}»",
-                "diagnostics": {"gemini_vision": vlm_data, "matched_poi": indoor_osm_hit, "cv_indoor": cv_indoor}
+                "street_view_matches": street_views,
+                "diagnostics": {
+                    "gemini_vision": vlm_data,
+                    "matched_poi": indoor_osm_hit,
+                    "kz_clues": kz_clues,
+                    "cv_indoor": cv_indoor
+                }
             }
 
-    # 2. Локальный OCR (EasyOCR) с отсечением бытовых стоп-слов интерьеров
-    ocr_texts = extract_text_from_photo(image_path, is_indoor=is_indoor)
+    # 7. Локальный OCR поиск по вывескам/табличкам
     ocr_hit = geocode_in_kazakhstan(ocr_texts, is_indoor=is_indoor, city_lat=city_lat, city_lon=city_lon)
     if ocr_hit:
+        street_views = fetch_mapillary_street_view(ocr_hit["lat"], ocr_hit["lon"])
         return {
             "exact_lat": ocr_hit["lat"],
             "exact_lon": ocr_hit["lon"],
@@ -559,10 +1008,17 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             "is_indoor": is_indoor,
             "matched_label": ocr_hit["name"],
             "method": f"OCR Text/Address Match: «{ocr_hit['matched_query']}»",
-            "diagnostics": {"ocr_texts": ocr_texts, "matched_place": ocr_hit, "is_indoor": is_indoor, "gemini_status": vlm}
+            "street_view_matches": street_views,
+            "diagnostics": {
+                "ocr_texts": ocr_texts,
+                "matched_place": ocr_hit,
+                "kz_clues": kz_clues,
+                "is_indoor": is_indoor,
+                "gemini_status": vlm
+            }
         }
 
-    # 3. Обратный поиск фото из интернета через Oldcircle/geo-sleuth (revimg.py)
+    # 8. Обратный поиск фото в интернете (Geo-Sleuth)
     rev_clues = []
     rev_hit = None
     if not is_indoor:
@@ -570,6 +1026,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
         if rev_clues:
             rev_hit = geocode_in_kazakhstan(rev_clues, is_indoor=is_indoor, city_lat=city_lat, city_lon=city_lon)
     if rev_hit:
+        street_views = fetch_mapillary_street_view(rev_hit["lat"], rev_hit["lon"])
         return {
             "exact_lat": rev_hit["lat"],
             "exact_lon": rev_hit["lon"],
@@ -577,10 +1034,16 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             "is_indoor": is_indoor,
             "matched_label": rev_hit["name"],
             "method": f"Geo-Sleuth Internet Match: «{rev_hit['matched_query']}»",
-            "diagnostics": {"reverse_image_clues": rev_clues, "matched_place": rev_hit, "is_indoor": is_indoor}
+            "street_view_matches": street_views,
+            "diagnostics": {
+                "reverse_image_clues": rev_clues,
+                "matched_place": rev_hit,
+                "kz_clues": kz_clues,
+                "is_indoor": is_indoor
+            }
         }
 
-    # 4. Если точка за пределами Казахстана — принудительно выбираем лучший город Казахстана
+    # 9. Если точка за пределами Казахстана — принудительно выбираем лучший город Казахстана
     if not (40.0 <= city_lat <= 56.0 and 46.0 <= city_lon <= 88.0):
         model_obj = _unwrap_geoclip(geoclip_model)
         if model_obj is not None and torch is not None:
@@ -601,19 +1064,22 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             except Exception:
                 pass
 
-    # 5. GeoCLIP доводка с защитой от ошибок на интерьерах
+    # 10. GeoCLIP доводка с защитой от ошибок на интерьерах
     grid_res = refine_dense_grid(geoclip_model, image_path, city_lat, city_lon, is_indoor=is_indoor)
 
     # Формируем итоговый вердикт
     if is_indoor:
         method_name = "Indoor Scene Detected (City Anchor)"
         warning_msg = grid_res.get("warning", "Снимок внутри помещения: уличный радиус 25м заблокирован.")
+        street_views = []
     elif grid_res.get("status") == "low_visual_confidence":
         method_name = "Low Confidence Visual Anchor (City Level)"
         warning_msg = grid_res.get("warning")
+        street_views = []
     else:
         method_name = "Kazakhstan Outdoor Grid (15m)"
         warning_msg = None
+        street_views = fetch_mapillary_street_view(grid_res.get("lat", city_lat), grid_res.get("lon", city_lon))
 
     return {
         "exact_lat": grid_res.get("lat", city_lat),
@@ -623,9 +1089,11 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
         "matched_label": None,
         "method": method_name,
         "warning": warning_msg,
+        "street_view_matches": street_views,
         "diagnostics": {
             "is_indoor": is_indoor,
             "cv_indoor": cv_indoor,
+            "kz_clues": kz_clues,
             "gemini_status": vlm,
             "ocr_texts": ocr_texts,
             "reverse_image_clues": rev_clues,

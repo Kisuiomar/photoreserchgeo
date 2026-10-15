@@ -289,12 +289,25 @@ function ExactDetailsSection({ details }: { details: ExactDetails }) {
   const ocrOsm = details.ocr_osm || details.diagnostics?.ocr_osm;
   const mapillary = details.mapillary || details.diagnostics?.mapillary;
   const bestMatch = mapillary?.best_match;
+  const streetMatches =
+    details.street_view_matches && details.street_view_matches.length > 0
+      ? details.street_view_matches
+      : bestMatch?.thumb_url
+        ? [
+            {
+              id: bestMatch.id,
+              lat: bestMatch.lat,
+              lon: bestMatch.lon,
+              thumb_url: bestMatch.thumb_url,
+              compass_angle: bestMatch.compass_angle,
+            },
+          ]
+        : [];
 
   const hasOcrTexts = Boolean(ocrOsm?.texts && ocrOsm.texts.length > 0);
   const hasMatchedPois = Boolean(
     ocrOsm?.matched_pois && ocrOsm.matched_pois.length > 0,
   );
-  const hasMapillaryMatch = Boolean(bestMatch?.thumb_url);
 
   return (
     <div className="rounded-xl bg-gradient-to-br from-purple-50/80 via-indigo-50/40 to-blue-50/30 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-blue-950/20 border border-purple-200/80 dark:border-purple-900/60 p-3 shadow-sm space-y-2.5">
@@ -391,39 +404,48 @@ function ExactDetailsSection({ details }: { details: ExactDetails }) {
       )}
 
       {/* Mapillary StreetView Match Preview */}
-      {hasMapillaryMatch && (
+      {streetMatches.length > 0 && (
         <div>
           <div className="flex items-center justify-between text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-            <span>Mapillary Match</span>
-            {bestMatch!.matched_keypoints != null && (
+            <span>Street View Matches ({streetMatches.length})</span>
+            {bestMatch?.matched_keypoints != null && (
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                {bestMatch!.matched_keypoints} keypoints
+                {bestMatch.matched_keypoints} keypoints
               </span>
             )}
           </div>
-          <div className="relative rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 bg-black/10 group">
-            <a
-              href={`https://www.mapillary.com/app/?pKey=${bestMatch!.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Open on Mapillary"
-            >
-              <img
-                src={bestMatch!.thumb_url}
-                alt="Mapillary Match Preview"
-                className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-                <span className="text-[10px] text-white underline">
-                  Open on Mapillary
-                </span>
+          <div className={`grid ${streetMatches.length > 1 ? "grid-cols-2 gap-1.5" : "grid-cols-1"}`}>
+            {streetMatches.map((match, idx) => (
+              <div
+                key={match.id || idx}
+                className="relative rounded-lg overflow-hidden border border-purple-200 dark:border-purple-800 bg-black/10 group aspect-video"
+              >
+                <a
+                  href={`https://www.mapillary.com/app/?pKey=${match.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open on Mapillary"
+                >
+                  {match.thumb_url && (
+                    <img
+                      src={match.thumb_url}
+                      alt="Mapillary Match Preview"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
+                    <span className="text-[9px] text-white underline">
+                      View Street
+                    </span>
+                  </div>
+                </a>
+                {match.compass_angle != null && (
+                  <span className="absolute bottom-1 right-1 bg-black/75 text-white text-[8px] px-1 py-0.5 rounded font-mono">
+                    {Math.round(match.compass_angle)}°
+                  </span>
+                )}
               </div>
-            </a>
-            {bestMatch!.compass_angle != null && (
-              <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1 py-0.5 rounded font-mono">
-                {Math.round(bestMatch!.compass_angle)}°
-              </span>
-            )}
+            ))}
           </div>
         </div>
       )}
