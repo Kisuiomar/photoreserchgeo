@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libimage-exiftool-perl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PyTorch CPU-only first (large download, cached in its own layer)
+# Install PyTorch with CUDA 12.1 support
 RUN pip install --no-cache-dir \
     torch torchvision \
-    --index-url https://download.pytorch.org/whl/cpu
+    --index-url https://download.pytorch.org/whl/cu121
 
 # Install remaining Python dependencies
 COPY requirements.txt .

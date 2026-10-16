@@ -138,6 +138,12 @@ def _ensure_loaded() -> None:
             from geoclip import GeoCLIP
 
             _model = GeoCLIP()
+            if torch.cuda.is_available():
+                try:
+                    _model = _model.to("cuda")
+                    logger.info("GeoCLIP moved to CUDA GPU: %s", torch.cuda.get_device_name(0))
+                except Exception as ex:
+                    logger.warning("Could not move GeoCLIP to CUDA: %s", ex)
             _loaded = True
             try:
                 from app.exact_locator import lock_geoclip_to_kazakhstan

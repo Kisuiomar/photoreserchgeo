@@ -27,6 +27,36 @@ try:
 except ImportError:
     cv2 = None
 
+
+def get_device():
+    return torch.device("cuda" if (torch is not None and torch.cuda.is_available()) else "cpu")
+
+
+def extract_multiscale_image_embedding(model_obj, img: Image.Image, device: Any) -> Any:
+    """
+    Генерирует взвешенный батч-эмбеддинг на GPU:
+    - 50% полный кадр
+    - 25% центральный кроп (фокус на архитектуре)
+    - 25% полоса горизонта (горы / силуэт застройки)
+    """
+    w, h = img.size
+    crops = [
+        img,                                                                   # 1. Полный кадр
+        img.crop((int(w * 0.15), int(h * 0.15), int(w * 0.85), int(h * 0.85))), # 2. Центр
+        img.crop((0, int(h * 0.20), w, int(h * 0.75)))                         # 3. Линия горизонта
+    ]
+    weights = torch.tensor([0.50, 0.25, 0.25], device=device).unsqueeze(1)
+
+    tensors = [model_obj.image_encoder.preprocess_image(c) for c in crops]
+    batch = torch.cat(tensors, dim=0).to(device)
+
+    with torch.no_grad():
+        embs = model_obj.image_encoder(batch)
+        embs = embs / embs.norm(dim=-1, keepdim=True)
+        combined = (embs * weights).sum(dim=0, keepdim=True)
+        combined = combined / combined.norm(dim=-1, keepdim=True)
+        return combined
+
 _OCR_READER = None
 
 
@@ -384,11 +414,12 @@ def search_overpass_brand_cluster(
     brands: List[str],
     city_lat: float,
     city_lon: float,
-    radius_m: int = 15000
+    radius_m: int = 15000,
+    cluster_radius_m: int = 120
 ) -> Optional[Dict[str, Any]]:
     """
-    Ищет пространственное пересечение брендов/магазинов (co-occurrence) внутри одного ТРЦ/БЦ.
-    Если >= 2 брендов из разных категорий находятся в радиусе 150м друг от друга — сужает координаты до 35м.
+    Ищет пространственное пересечение брендов/магазинов/кафе (co-occurrence) внутри одного ТРЦ/БЦ.
+    Если >= 2 брендов из разных категорий находятся в радиусе 120м друг от друга — сужает координаты до 35м.
     """
     clean_brands = []
     seen = set()
@@ -414,8 +445,10 @@ def search_overpass_brand_cluster(
       way["brand"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
       node["shop"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
       way["shop"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      node["amenity"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
+      way["amenity"~"({brand_regex})",i](around:{radius_m},{city_lat},{city_lon});
     );
-    out center tags 30;
+    out center tags 40;
     """
 
     headers = {"User-Agent": "PhotoResearchGeoKZ/3.2 (brand-clustering)"}
@@ -467,7 +500,7 @@ def search_overpass_brand_cluster(
                 if p1["brand"].lower() == p2["brand"].lower():
                     continue
                 dist = haversine_m(p1["lat"], p1["lon"], p2["lat"], p2["lon"])
-                if dist <= 150:
+                if dist <= cluster_radius_m:
                     if dist < min_cluster_dist:
                         min_cluster_dist = dist
                         best_cluster = (p1, p2, dist)
@@ -566,23 +599,55 @@ def analyze_with_gemini_vision(image_path: str) -> Dict[str, Any]:
             b64 = base64.b64encode(f.read()).decode("utf-8")
 
         prompt = (
-            "You are an expert OSINT geolocator specializing in Kazakhstan (Almaty, Astana, Shymkent, Burabay, Karaganda, city parks, streets, buildings) and CIS. "
-            "First, determine if the photo is taken INDOORS (inside a building, mall, cafe, office, room, station, airport) or OUTDOORS (street, park, nature, facade). "
-            "If INDOORS: "
+            "You are an expert OSINT geolocator specializing in Kazakhstan (Almaty, Astana, Shymkent, Burabay, Karaganda, city parks, streets, buildings) and CIS.\n"
+            "First, determine if the photo is taken INDOORS (inside a building, mall, cafe, office, room, station, airport) or OUTDOORS (street, park, nature, facade).\n\n"
+            "If INDOORS:\n"
             "1. Inspect mall atrium architecture (e.g. MEGA Alma-Ata, MEGA Silk Way, Dostyk Plaza, Khan Shatyr, Esentai Mall, Forum), "
-            "storefront brand names, posters, signs, or receipts. "
+            "storefront brand names, posters, signs, or receipts.\n"
             "2. WINDOW VIEW ANALYSIS: If windows or balconies are visible, carefully inspect the view outside: "
             "mountains (Zailiyskiy Alatau south of Almaty, Burabay granite rocks, flat steppe of Astana), "
-            "prominent towers (Esentai Tower, Almaty Towers, KazZhol, Abu Dhabi Plaza, Khan Shatyr, Baiterek, Kok-Tobe TV Tower). "
-            "3. DO NOT guess random coordinates if the room is generic or unidentifiable — set lat and lon to null if confidence is below 0.65. "
-            "If OUTDOORS: "
-            "Identify the exact landmark, park, street, building, or nature spot. "
-            "Return ONLY valid JSON matching this schema: "
-            "{\"is_indoor\": true/false, \"scene_type\": \"mall|cafe|office|residential|station|airport|street|park|nature\", "
-            "\"confidence\": 0.85, \"place_name\": \"exact name or null\", \"city\": \"city or null\", \"country\": \"Kazakhstan\", "
-            "\"osm_search_query\": \"search query for OpenStreetMap\", \"lat\": 51.1694_or_null, \"lon\": 71.4491_or_null, "
-            "\"radius_m\": 30, \"search_queries\": [\"identifiable brand, mall, landmark or window view\"], \"detected_text\": [\"visible text\"], "
-            "\"window_view\": {\"has_window_view\": true/false, \"window_landmarks\": [\"landmark name\"], \"azimuth_deg\": 180, \"notes\": \"description\"}}"
+            "prominent towers (Esentai Tower, Almaty Towers, KazZhol, Abu Dhabi Plaza, Khan Shatyr, Baiterek, Kok-Tobe TV Tower).\n"
+            "3. DO NOT guess random coordinates if the room is generic or unidentifiable — set lat and lon to null if confidence is below 0.65.\n\n"
+            "ALMATY MOUNTAIN BEARING & SECTOR TRIANGULATION (CRITICAL FOR ALMATY & FOOTHILLS):\n"
+            "If analyzing a photo in Almaty, from a window/balcony, or with mountains visible in Kazakhstan:\n"
+            "1. Detect visibility of Zailiyskiy Alatau mountain ridge and/or Kok-Tobe TV Tower (the southern horizon of Almaty).\n"
+            "2. Determine shooting direction and angle towards the mountains (e.g. 'Looking South towards mountains', 'Looking South-East towards Kok-Tobe', 'Looking North away from mountains').\n"
+            "3. Determine the estimated city sector based on distance and perspective to the mountain ridge:\n"
+            "   - 'Верхняя часть / Медеу' (close towering slopes, foothills, Dostyk / Al-Farabi / Baganashyl / Medeu; lat ~43.215, lon ~76.945)\n"
+            "   - 'Центр' (mid-distance mountain ridge panorama, Abay / Satpayev / Panfilov / Arbat; lat ~43.245, lon ~76.930)\n"
+            "   - 'Нижняя часть' (distant low mountains over flat urban plains, Rayimbek / Sayakhat / Almaty-1; lat ~43.310, lon ~76.940)\n\n"
+            "If OUTDOORS:\n"
+            "Identify the exact landmark, park, street, building, or nature spot.\n\n"
+            "Return ONLY valid JSON matching this schema:\n"
+            "{\n"
+            '  "is_indoor": true/false,\n'
+            '  "scene_type": "mall|cafe|office|residential|station|airport|street|park|nature",\n'
+            '  "confidence": 0.85,\n'
+            '  "place_name": "exact name or null",\n'
+            '  "city": "city or null",\n'
+            '  "country": "Kazakhstan",\n'
+            '  "osm_search_query": "search query for OpenStreetMap",\n'
+            '  "lat": 43.2389_or_null,\n'
+            '  "lon": 76.8897_or_null,\n'
+            '  "radius_m": 30,\n'
+            '  "search_queries": ["identifiable brand, mall, landmark or window view"],\n'
+            '  "detected_text": ["visible text"],\n'
+            '  "almaty_mountain_bearing": {\n'
+            '    "mountain_visible": true/false,\n'
+            '    "kok_tobe_visible": true/false,\n'
+            '    "shooting_angle": "Looking South toward Zailiyskiy Alatau",\n'
+            '    "city_sector": "Верхняя часть / Медеу|Центр|Нижняя часть",\n'
+            '    "sector_lat": 43.215_or_null,\n'
+            '    "sector_lon": 76.945_or_null,\n'
+            '    "notes": "mountain distance and perspective description"\n'
+            '  },\n'
+            '  "window_view": {\n'
+            '    "has_window_view": true/false,\n'
+            '    "window_landmarks": ["landmark name"],\n'
+            '    "azimuth_deg": 180,\n'
+            '    "notes": "description"\n'
+            '  }\n'
+            "}"
         )
         payload = {
             "contents": [{
@@ -783,18 +848,92 @@ def geocode_in_kazakhstan(
     return None
 
 
-def refine_dense_grid(
+def refine_dense_grid_gpu(
+    geoclip_model,
+    image_path: str,
+    center_lat: float,
+    center_lon: float,
+    is_indoor: bool = False
+) -> dict:
+    if is_indoor:
+        return {
+            "status": "skipped_indoor",
+            "lat": center_lat,
+            "lon": center_lon,
+            "radius_m": 2500,
+            "warning": "Снимок внутри помещения: уличная сетка отключена."
+        }
+
+    model_obj = _unwrap_geoclip(geoclip_model)
+    if model_obj is None or torch is None or not torch.cuda.is_available():
+        return refine_dense_grid_cpu(geoclip_model, image_path, center_lat, center_lon, is_indoor)
+
+    device = get_device()
+    try:
+        if next(model_obj.parameters()).device != device:
+            model_obj.to(device)
+    except Exception:
+        pass
+
+    loc_enc = getattr(model_obj, "gps_encoder", getattr(model_obj, "location_encoder", None))
+    if loc_enc is None:
+        return refine_dense_grid_cpu(geoclip_model, image_path, center_lat, center_lon, is_indoor)
+
+    try:
+        img = Image.open(image_path).convert("RGB")
+        img_emb = extract_multiscale_image_embedding(model_obj, img, device)
+
+        # Ультраплотная сетка на GPU: радиус 5 км с шагом 50 м (~31 000 точек)
+        pts1 = _build_grid(center_lat, center_lon, radius_m=5000, step_m=50)
+        t_pts1 = torch.tensor(pts1, dtype=torch.float32, device=device)
+
+        with torch.no_grad():
+            loc_emb1 = loc_enc(t_pts1)
+            loc_emb1 = loc_emb1 / loc_emb1.norm(dim=-1, keepdim=True)
+            scores1 = (img_emb @ loc_emb1.T).squeeze(0)
+            best_idx1 = int(torch.argmax(scores1).item())
+            max_score = float(scores1[best_idx1].item())
+
+            if max_score < 0.21:
+                return {
+                    "status": "low_confidence",
+                    "lat": center_lat,
+                    "lon": center_lon,
+                    "radius_m": 2500,
+                    "score": round(max_score, 4),
+                    "device": "cuda",
+                    "warning": "Низкая уверенность визуальной привязки (score < 0.21)."
+                }
+
+            mid_lat, mid_lon = float(pts1[best_idx1][0]), float(pts1[best_idx1][1])
+
+            # Фаза 2: микро-сетка 300 м с шагом 10 м (точность 15 м)
+            pts2 = _build_grid(mid_lat, mid_lon, radius_m=300, step_m=10)
+            t_pts2 = torch.tensor(pts2, dtype=torch.float32, device=device)
+            loc_emb2 = loc_enc(t_pts2)
+            loc_emb2 = loc_emb2 / loc_emb2.norm(dim=-1, keepdim=True)
+            scores2 = (img_emb @ loc_emb2.T).squeeze(0)
+            best_idx2 = int(torch.argmax(scores2).item())
+
+            return {
+                "status": "ok",
+                "lat": float(pts2[best_idx2][0]),
+                "lon": float(pts2[best_idx2][1]),
+                "score": round(float(scores2[best_idx2].item()), 4),
+                "radius_m": 15,
+                "device": "cuda"
+            }
+    except Exception:
+        return refine_dense_grid_cpu(geoclip_model, image_path, center_lat, center_lon, is_indoor)
+
+
+def refine_dense_grid_cpu(
     geoclip_model,
     image_path: str,
     base_lat: float,
     base_lon: float,
     is_indoor: bool = False
 ) -> Dict[str, Any]:
-    """
-    Доводит координаты с шагом 15 метров через GeoCLIP.
-    Если снимок сделан внутри здания (или score ниже порога уверенности 0.21),
-    блокирует ложное сужение до уличного 25-метрового радиуса.
-    """
     if is_indoor:
         return {
             "status": "skipped_indoor",
@@ -842,9 +981,30 @@ def refine_dense_grid(
                 "lon": float(g[idx][1]),
                 "score": round(best_score, 4),
                 "radius_m": 15,
+                "device": "cpu"
             }
     except Exception as e:
         return {"status": "error", "lat": base_lat, "lon": base_lon, "radius_m": 150, "error": str(e)}
+
+
+def refine_dense_grid(
+    geoclip_model,
+    image_path: str,
+    base_lat: float,
+    base_lon: float,
+    is_indoor: bool = False
+) -> Dict[str, Any]:
+    if is_indoor:
+        return {
+            "status": "skipped_indoor",
+            "lat": base_lat,
+            "lon": base_lon,
+            "radius_m": 2500,
+            "warning": "Снимок внутри помещения: уличная сетка отключена."
+        }
+    if torch is not None and torch.cuda.is_available():
+        return refine_dense_grid_gpu(geoclip_model, image_path, base_lat, base_lon, is_indoor)
+    return refine_dense_grid_cpu(geoclip_model, image_path, base_lat, base_lon, is_indoor)
 
 
 def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon: float) -> Dict[str, Any]:
@@ -917,17 +1077,17 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             if b and str(b).lower() not in INDOOR_OCR_STOPWORDS:
                 brand_candidates.append(str(b))
 
-        brand_cluster = search_overpass_brand_cluster(brand_candidates, city_lat, city_lon, radius_m=12000)
+        brand_cluster = search_overpass_brand_cluster(brand_candidates, city_lat, city_lon, radius_m=15000, cluster_radius_m=120)
         if brand_cluster:
             street_views = fetch_mapillary_street_view(brand_cluster["lat"], brand_cluster["lon"])
             return {
                 "exact_lat": brand_cluster["lat"],
                 "exact_lon": brand_cluster["lon"],
-                "radius_m": brand_cluster["radius_m"],
+                "radius_m": 35,
                 "is_indoor": True,
                 "scene_type": vlm_data.get("scene_type", "mall"),
                 "matched_label": brand_cluster["name"],
-                "method": brand_cluster["method"],
+                "method": "Indoor Brand Cluster (Overpass)",
                 "street_view_matches": street_views,
                 "diagnostics": {
                     "brand_cluster": brand_cluster,
@@ -936,6 +1096,36 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
                     "cv_indoor": cv_indoor
                 }
             }
+
+    # 4b. Горный пеленг для Алматы (Вариант 4)
+    mountain_bearing = vlm_data.get("almaty_mountain_bearing", {})
+    sector_name = mountain_bearing.get("city_sector") if isinstance(mountain_bearing, dict) else None
+    has_mountain = bool(mountain_bearing.get("mountain_visible") or mountain_bearing.get("kok_tobe_visible")) if isinstance(mountain_bearing, dict) else False
+    is_almaty_area = (
+        (43.10 <= city_lat <= 43.45 and 76.70 <= city_lon <= 77.15)
+        or (vlm_data.get("city") and "almaty" in str(vlm_data.get("city")).lower())
+        or has_mountain
+    )
+
+    almaty_sector_applied = None
+    if is_almaty_area and sector_name:
+        s_low = str(sector_name).lower()
+        if "верхн" in s_low or "медеу" in s_low or "самал" in s_low or "аль-фараби" in s_low:
+            almaty_sector_applied = "Верхняя часть / Медеу"
+            sector_lat, sector_lon = 43.2150, 76.9450
+        elif "нижн" in s_low or "турксиб" in s_low or "жетысу" in s_low or "райымбек" in s_low:
+            almaty_sector_applied = "Нижняя часть"
+            sector_lat, sector_lon = 43.3100, 76.9400
+        elif "центр" in s_low or "алмалы" in s_low or "бостандык" in s_low:
+            almaty_sector_applied = "Центр"
+            sector_lat, sector_lon = 43.2450, 76.9300
+        else:
+            sector_lat, sector_lon = None, None
+
+        if sector_lat and sector_lon:
+            if not (vlm.get("status") == "ok" and vlm_data.get("lat") and float(vlm_data.get("confidence", 0)) >= 0.75):
+                city_lat = sector_lat
+                city_lon = sector_lon
 
     # 5. Прямой результат Gemini Vision с высокой уверенностью
     if vlm.get("status") == "ok" and vlm_data.get("lat") and vlm_data.get("lon"):
@@ -964,6 +1154,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             "street_view_matches": street_views,
             "diagnostics": {
                 "gemini_vision": vlm_data,
+                "mountain_bearing": mountain_bearing,
                 "osm_refined": osm_hit,
                 "kz_clues": kz_clues,
                 "cv_indoor": cv_indoor
@@ -1064,7 +1255,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             except Exception:
                 pass
 
-    # 10. GeoCLIP доводка с защитой от ошибок на интерьерах
+    # 10. GeoCLIP доводка с защитой от ошибок на интерьерах (GPU ultra-dense grid при наличии CUDA)
     grid_res = refine_dense_grid(geoclip_model, image_path, city_lat, city_lon, is_indoor=is_indoor)
 
     # Формируем итоговый вердикт
@@ -1072,10 +1263,14 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
         method_name = "Indoor Scene Detected (City Anchor)"
         warning_msg = grid_res.get("warning", "Снимок внутри помещения: уличный радиус 25м заблокирован.")
         street_views = []
-    elif grid_res.get("status") == "low_visual_confidence":
+    elif grid_res.get("status") in ("low_visual_confidence", "low_confidence"):
         method_name = "Low Confidence Visual Anchor (City Level)"
         warning_msg = grid_res.get("warning")
         street_views = []
+    elif almaty_sector_applied:
+        method_name = f"Almaty Mountain Bearing ({almaty_sector_applied}) + Outdoor Grid (15m)"
+        warning_msg = None
+        street_views = fetch_mapillary_street_view(grid_res.get("lat", city_lat), grid_res.get("lon", city_lon))
     else:
         method_name = "Kazakhstan Outdoor Grid (15m)"
         warning_msg = None
@@ -1084,7 +1279,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
     return {
         "exact_lat": grid_res.get("lat", city_lat),
         "exact_lon": grid_res.get("lon", city_lon),
-        "radius_m": grid_res.get("radius_m", 2500 if is_indoor else 20),
+        "radius_m": grid_res.get("radius_m", 2500 if is_indoor else 15),
         "is_indoor": is_indoor,
         "matched_label": None,
         "method": method_name,
@@ -1095,6 +1290,7 @@ def locate_exact_spot(geoclip_model, image_path: str, city_lat: float, city_lon:
             "cv_indoor": cv_indoor,
             "kz_clues": kz_clues,
             "gemini_status": vlm,
+            "mountain_bearing": mountain_bearing,
             "ocr_texts": ocr_texts,
             "reverse_image_clues": rev_clues,
             "dense_grid": grid_res,

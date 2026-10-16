@@ -2,7 +2,14 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MAPILLARY_ACCESS_TOKEN=${MAPILLARY_ACCESS_TOKEN:-${MAPILLARY_TOKEN}}
+      - MAPILLARY_TOKEN=${MAPILLARY_TOKEN}
     env_file: .env
     volumes:
       - ./backend:/app
@@ -11,6 +18,13 @@ services:
       - ./data:/data
     networks:
       - app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     # Healthcheck probes /api/health which only responds once uvicorn is
     # serving, which in turn only happens after the model has been
     # downloaded + loaded on startup (see model.load).
